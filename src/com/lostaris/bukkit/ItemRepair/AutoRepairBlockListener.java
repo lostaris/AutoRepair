@@ -7,7 +7,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 /**
- * testing block listener
+ * Listens to block damage events and warns the player about almost broken tools
+ * calls autoRepair on tools that are about to break
  * @author lostaris
  */
 public class AutoRepairBlockListener extends BlockListener {
@@ -29,19 +30,25 @@ public class AutoRepairBlockListener extends BlockListener {
 	//put all Block related code here
 	public void onBlockDamage(BlockDamageEvent event) {
 		Player player = event.getPlayer();
+		//if the player is not allowed to auto repair finish
 		if (!AutoRepairPlugin.isAllowed(player, "access")) {
 			return;
 		}
+		// set the player we are doing this for
 		this.support.setPlayer(player);
-
 		ItemStack toolHand = player.getItemInHand();
 		PlayerInventory inven = player.getInventory();
 		int toolSlot = inven.getHeldItemSlot();
 		Short dmg = toolHand.getDurability();
+		// reseting the warn flags
 		if (dmg ==1) {
 			support.setWarning(false);
 			support.setLastWarning(false);
 		}
+
+		/*  If a tool has less than 10 durability left wart he player if needed
+		 *  else repair it
+		 */
 
 		if (toolHand.getType() == Material.WOOD_SPADE || toolHand.getType() == Material.WOOD_PICKAXE || 
 				toolHand.getType() == Material.WOOD_AXE || toolHand.getType() == Material.WOOD_SWORD ||

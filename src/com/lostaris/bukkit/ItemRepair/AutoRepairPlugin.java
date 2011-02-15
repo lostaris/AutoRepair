@@ -18,26 +18,24 @@ import org.bukkit.plugin.PluginManager;
 import com.nijikokun.bukkit.Permissions.Permissions;
 import com.nijiko.permissions.PermissionHandler;
 import org.bukkit.plugin.Plugin;
-//import com.nijikokun.bukkit.iConomy.iConomy;
 
 /**
- * testing for Bukkit
+ * Auto repair plugin for bukkit
  *
  * @author lostaris
  */
 public class AutoRepairPlugin extends JavaPlugin {
 	private final AutoRepairBlockListener blockListener = new AutoRepairBlockListener(this);
-	private static HashMap<String, ArrayList<ItemStack>> repairRecipies;
-	private static HashMap<String, Integer> iConCosts;
-	private HashMap<String, String> settings;
+	private static HashMap<String, ArrayList<ItemStack>> repairRecipies; // item costs
+	private static HashMap<String, Integer> iConCosts; // iConomy costs
+	private HashMap<String, String> settings; // settings for the plugin
 	private static boolean useiConomy;
 	private static String isiCon; //are we using icon, both or not at all
-	private static boolean autoRepair;
-	private static boolean repairCosts;
+	private static boolean autoRepair; // is there auto repairing
+	private static boolean repairCosts; // is there repair costs
 	public static PermissionHandler Permissions = null;
 	public static boolean isPermissions = false;
 	public static final Logger log = Logger.getLogger("Minecraft");
-	//public AutoRepairSupport support = new AutoRepairSupport(this);
 	public Repair repair = new Repair(this);
 
 	public AutoRepairPlugin(PluginLoader pluginLoader, Server instance,
@@ -72,11 +70,14 @@ public class AutoRepairPlugin extends JavaPlugin {
 		log.info( pdfFile.getName() + " version " + pdfFile.getVersion() + " is disabled" );
 	}
 
+	/**
+	 * Method to deal with player commands
+	 */
 	@Override
 	public boolean onCommand(org.bukkit.command.CommandSender sender,
 			org.bukkit.command.Command command, String commandLabel, String[] args) {
 		Player player = null;
-
+		// if the command sender is a player
 		if(sender instanceof Player) {
 			player = (Player) sender;
 		}
@@ -85,13 +86,16 @@ public class AutoRepairPlugin extends JavaPlugin {
 		String commandName = command.getName().toLowerCase();
 		AutoRepairSupport support = new AutoRepairSupport(this, player);
 
+		// if the command is /repair
 		if (commandName.equals("repair")) {
+			// if the player is no allowed to use the command end noe
 			if (!isAllowed(player, "access")) {
 				return true;
 			}
 
 			ItemStack tool;
 			int itemSlot = 0;
+			// for /rep
 			if (split.length == 0) {
 				if (isAllowed(player, "repair")) {
 					tool = player.getItemInHand();
@@ -99,15 +103,20 @@ public class AutoRepairPlugin extends JavaPlugin {
 				} else {
 					player.sendMessage("§cYou dont have permission to do the repair command.");
 				}
+			// we have further arguments
 			} else if (split.length == 1) {
 				try {
-					char repairList = split[0].charAt(0);					
+					char repairList = split[0].charAt(0);
+					// /rep ?
 					if (repairList == '?') {						
 						support.toolReq(player.getItemInHand());
+					// /rep dmg
 					} else if (split[0].equalsIgnoreCase("dmg")) {						
 						support.durabilityLeft(inven.getItem(inven.getHeldItemSlot()));
+					// /rep arm
 					} else if (split[0].equalsIgnoreCase("arm")) {						
 						repair.repairArmour();
+					// /rep reload
 					} else if(split[0].equalsIgnoreCase("reload")) {
 						if (isAllowed(player, "reload")){ 
 							refreshConfig();
@@ -116,6 +125,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 							player.sendMessage("§cYou dont have permission to do the reload command.");
 						}
 					}else {
+					// rep [itemslot]
 						if (isAllowed(player, "repair")) {
 							itemSlot = Integer.parseInt(split[0]);
 							if (itemSlot >0 && itemSlot <=9) {
@@ -131,12 +141,14 @@ public class AutoRepairPlugin extends JavaPlugin {
 				} catch (Exception e) {
 					return false;
 				}
+			// /rep arm ?
 			}else if (split.length == 2 && split[0].equalsIgnoreCase("arm") && split[1].length() ==1) {
 				if (isAllowed(player, "info")) { 
 					support.repArmourInfo(split[1]);
 				} else {
 					player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
 				}
+			// /rep [itemslot] ?
 			}else if ((split.length == 2 && split[1].length() ==1)) {
 				try {
 					char getRecipe = split[1].charAt(0);
@@ -150,7 +162,8 @@ public class AutoRepairPlugin extends JavaPlugin {
 					}
 				} catch (Exception e) {
 					return false;
-				} 
+				}
+			// /rep [itemslot] dmg
 			} else if (split.length == 2 && split[1].equalsIgnoreCase("dmg")) {
 				try {
 					if (isAllowed(player, "info")) {
@@ -172,6 +185,12 @@ public class AutoRepairPlugin extends JavaPlugin {
 		return false;
 	}
 
+	/**
+	 * Method to find if a player is allowed to use this command
+	 * @param player - player that used the command
+	 * @param com - command to see if they can use
+	 * @return true if they can use it
+	 */
 	public static boolean isAllowed(Player player, String com) {		
 		boolean allowed = false;
 		if(AutoRepairPlugin.Permissions != null) {
@@ -180,13 +199,16 @@ public class AutoRepairPlugin extends JavaPlugin {
 			} else {
 				allowed = false;
 			}
-		}else if(!isPermissions && !com.equalsIgnoreCase("none")) {
+		}else if(!isPermissions && com.equalsIgnoreCase("access")) {
 			allowed = true;
 		}
-		//log.warning("AutoRepair."+com + " " + allowed);
 		return allowed;
 	}
 
+	/**
+	 * Reads in the config file for this plugin
+	 * @return the hashmap with the config values
+	 */
 	public HashMap<String, String> readConfig() {
 		String fileName = "plugins/AutoRepair/Config.properties";
 		HashMap<String, String> settings = new HashMap<String, String>();
@@ -212,6 +234,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 
 	}
 
+	/**
+	 * Refreshes the config files for this plugin
+	 */
 	public void refreshConfig() {
 		try {
 			readProperties();
@@ -255,6 +280,10 @@ public class AutoRepairPlugin extends JavaPlugin {
 		}
 	}
 
+	/**
+	 * Reads in the repair recipes for this plugin
+	 * @throws Exception
+	 */
 	public static void readProperties() throws Exception {
 		HashMap<String, ArrayList<ItemStack> > map = new HashMap<String, ArrayList<ItemStack> >();
 		HashMap<String, Integer> iConomy = new HashMap<String, Integer>();
@@ -271,6 +300,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 			ArrayList<ItemStack> itemReqs = new ArrayList<ItemStack>();
 			String item = line.substring(0, keyPosition).trim();
 			String recipiesString;
+			// this line has an iConomy value
 			if (line.indexOf(' ') != -1) {
 				recipiesString = line.substring(keyPosition+1, line.indexOf(' '));
 				try {
@@ -278,10 +308,11 @@ public class AutoRepairPlugin extends JavaPlugin {
 					iConomy.put(item, amount);
 				} catch (Exception e) {
 				}
+			// this line doesnt have an iConomy value
 			} else {
 				recipiesString = line.substring(keyPosition+1, line.length()).trim();
 			}
-
+			// this line has more than one item cost
 			String[] allReqs = recipiesString.split(":");		
 			for (int i =0; i < allReqs.length; i++) {
 				reqs = allReqs[i].split(",");
@@ -295,6 +326,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 		setRepairRecipies(map);
 	}
 
+	/**
+	 * Sets up the permissions for this plugin if the permissions plugin is installed
+	 */
 	public void setupPermissions() {
 		Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
 
@@ -307,6 +341,11 @@ public class AutoRepairPlugin extends JavaPlugin {
 			}
 		}
 	}
+	
+	/**
+	 * Checks to see if the iConomy plugin is installed
+	 * @return
+	 */
 	public boolean checkiConomy() {
 		Plugin test = this.getServer().getPluginManager().getPlugin("iConomy");
 

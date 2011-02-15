@@ -87,6 +87,10 @@ public class Repair extends AutoRepairSupport{
 		return false;		
 	}
 
+	/** Method dealing with automatic repairing of tools
+	 * @param tool the item to repair
+	 * @param slot the inventory slot this tool is in
+	 */
 	public boolean autoRepairTool(ItemStack tool, int slot) {
 		if (!AutoRepairPlugin.isAllowed(player, "auto")) { 
 			return false;
@@ -98,6 +102,7 @@ public class Repair extends AutoRepairSupport{
 		ArrayList<ItemStack> req = recipies.get(itemName);		
 		int balance;
 
+		// free repairing
 		if (!AutoRepairPlugin.isRepairCosts()) {
 			player.sendMessage("§3Repaired " + itemName);
 			inven.setItem(slot, repItem(tool));
@@ -105,11 +110,13 @@ public class Repair extends AutoRepairSupport{
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 			balance = iConomy.db.get_balance(player.getName());
 			int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+			// the user can afford to repair
 			if (cost <= balance) {
 				balance = iConomy.db.get_balance(player.getName());
 				iConomy.db.set_balance(player.getName(), balance - cost);
 				player.sendMessage("§3Using " + Misc.formatCurrency(cost, iConomy.currency) + " to repair " + itemName);
 				inven.setItem(slot, repItem(tool));
+			// the user cannot afford to repair
 			} else {
 				if (!getLastWarning()) {
 					if (AutoRepairPlugin.isAllowed(player, "warn")) {
@@ -121,7 +128,8 @@ public class Repair extends AutoRepairSupport{
 			//both icon and item cost
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 			balance = iConomy.db.get_balance(player.getName());
-			int cost = AutoRepairPlugin.getiConCosts().get(itemName);						
+			int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+			// the user can afford to repair
 			if (cost <= balance && isEnoughItems(req)) {
 				balance = iConomy.db.get_balance(player.getName());
 				iConomy.db.set_balance(player.getName(), balance - cost);
@@ -129,6 +137,7 @@ public class Repair extends AutoRepairSupport{
 				player.sendMessage("§3Using " + Misc.formatCurrency(cost, iConomy.currency) + " and");
 				player.sendMessage("§3" + printFormatReqs(req) + " to repair "  + itemName);
 				inven.setItem(slot, repItem(tool));
+			// the user cannot afford to repair
 			} else {
 				if (!getLastWarning()) {
 					if (AutoRepairPlugin.isAllowed(player, "warn")) {
@@ -140,11 +149,13 @@ public class Repair extends AutoRepairSupport{
 			}			
 			// just item cost
 		} else {
+			// the user can afford to repair
 			if (isEnoughItems(req)) {
 				deduct(req);
 				player.sendMessage("§3Using " + printFormatReqs(req) + " to repair " + itemName);
 				inven.setItem(slot, repItem(tool));
 			} else {
+				// the user cannot afford to repair
 				if (!getLastWarning()) {
 					if (AutoRepairPlugin.isAllowed(player, "warn")) {
 						justItemsWarn(itemName, req);					
@@ -156,6 +167,9 @@ public class Repair extends AutoRepairSupport{
 		return false;
 	}
 
+	/* Method to repair all the worn armour of a player
+	 * 
+	 */
 	public void repairArmour() {
 		if (!AutoRepairPlugin.isAllowed(player, "repair")) {
 			player.sendMessage("§cYou dont have permission to do the repair command.");
@@ -221,6 +235,9 @@ public class Repair extends AutoRepairSupport{
 		}
 	}
 
+	/* 
+	 * Method to do the actual repairing of a players armour
+	 */
 	public void repArm () {
 		PlayerInventory inven = player.getInventory();
 		if(inven.getBoots().getTypeId() != 0 ) {inven.setBoots(repItem(inven.getBoots()));}
@@ -229,6 +246,9 @@ public class Repair extends AutoRepairSupport{
 		if(inven.getLeggings().getTypeId() != 0 ) {inven.setLeggings(repItem(inven.getLeggings()));}
 	}
 
+	/*
+	 * Deducts the items needed from a player to do a repair
+	 */
 	public void deduct(ArrayList<ItemStack> req) {
 		PlayerInventory inven = player.getInventory();
 		for (int i =0; i < req.size(); i++) {
@@ -236,6 +256,7 @@ public class Repair extends AutoRepairSupport{
 			int neededAmount = req.get(i).getAmount();
 			int smallestSlot = findSmallest(currItem);
 			if (smallestSlot != -1) {
+				// until we have removed all the required materials
 				while (neededAmount > 0) {									
 					smallestSlot = findSmallest(currItem);
 					ItemStack smallestItem = inven.getItem(smallestSlot);

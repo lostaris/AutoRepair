@@ -13,7 +13,7 @@ import com.nijikokun.bukkit.iConomy.Misc;
 import com.nijikokun.bukkit.iConomy.iConomy;
 
 /**
- * 
+ * Supplementary methods for AutoRepair
  * @author lostaris
  */
 public class AutoRepairSupport {
@@ -24,7 +24,7 @@ public class AutoRepairSupport {
 		plugin = instance;
 		AutoRepairSupport.player = player;
 	}
-
+	// max durabilities for all tools 
 	private final int woodDurability = 59;
 	private final int goldDurability = 32;
 	private final int stoneDurability = 131;
@@ -33,8 +33,12 @@ public class AutoRepairSupport {
 	private boolean warning = false;
 	private boolean lastWarning = false;
 
+	/**
+	 * Method to return to the player the required items and/or iConomy cash needed for a repair
+	 * @param tool - tool to return the repair requirements for
+	 */
 	public void toolReq(ItemStack tool) {
-		//if (!AutoRepairPlugin.isPermissions || AutoRepairPlugin.Permissions.has(player, "AutoRepair.info")) {
+		// if the player has permission to do this command
 		if (AutoRepairPlugin.isAllowed(player, "info")) {
 			String toolString = tool.getType().toString();
 			// just icon cost
@@ -72,12 +76,21 @@ public class AutoRepairSupport {
 		}
 	}
 
+	/**
+	 * Method to warn a player their tool is close to breaking
+	 * If they do not have the required items and/or cash to repair warns them,
+	 * and lets them know they are missing required items and/or cash and prints what is needed
+	 * @param tool - tool to warn the player about
+	 * @param slot - slot this tool is in
+	 */
 	public void repairWarn(ItemStack tool, int slot) {
+		// if the player has permission ot do this command
 		if (!AutoRepairPlugin.isAllowed(player, "warn")) { 
 			return;
 		}
 
 		HashMap<String, ArrayList<ItemStack>> repairRecipies;
+		// if they haven't already been warned
 		if (!warning) {					
 			warning = true;		
 			try {				
@@ -90,14 +103,16 @@ public class AutoRepairSupport {
 						player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 						// if there is repair costs  and no auto repair
 					} else if (AutoRepairPlugin.isRepairCosts() && !AutoRepairPlugin.isAutoRepair()) {
-						int balance;						
+						int balance;
+						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							balance = iConomy.db.get_balance(player.getName());
 							if (cost > balance) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 								iConWarn(toolString, cost);
-							}							
+							}
+						// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
@@ -106,6 +121,7 @@ public class AutoRepairSupport {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 								bothWarn(toolString, cost, reqItems);
 							}
+						// just item cost
 						} else {
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							if (!isEnoughItems(reqItems)) {								
@@ -113,15 +129,18 @@ public class AutoRepairSupport {
 								justItemsWarn(toolString, reqItems);
 							}
 						}
+					// there is auto repairing and repair costs
 					} else {
 						int balance;
+						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							balance = iConomy.db.get_balance(player.getName());
 							if (cost > balance) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 								iConWarn(toolString, cost);
-							}							
+							}
+						// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
@@ -130,6 +149,7 @@ public class AutoRepairSupport {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 								bothWarn(toolString, cost, reqItems);
 							}
+							// just item cost
 						} else {
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							if (!isEnoughItems(reqItems)) {								
@@ -149,20 +169,23 @@ public class AutoRepairSupport {
 		}
 	}
 
+	/**
+	 * Method to return the total cost of repair a players worn armour
+	 * @param query
+	 * @return true if all is well, false if the command is miss typed
+	 */
 	public boolean repArmourInfo(String query) {
+		// if there is repair costs
 		if (AutoRepairPlugin.isRepairCosts()) {
 			try {
 				char getRecipe = query.charAt(0);
+				// if the command is ? - the correct one
 				if (getRecipe == '?') {
-					//ArrayList<ItemStack> req = this.repArmourAmount(player);
-					//player.sendMessage("§6To repair all your armour you need:");
-					//player.sendMessage("§6" + this.printFormatReqs(req));
 					int total =0;
 					ArrayList<ItemStack> req = repArmourAmount();
 					PlayerInventory inven = player.getInventory();
-
+					// just iCon costs
 					if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-
 						for (ItemStack i : inven.getArmorContents()) {				
 							if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
 								total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
@@ -195,27 +218,37 @@ public class AutoRepairSupport {
 		return true;
 	}
 
+	/**
+	 * Method to return the total item cost of repairing a players warn armour
+	 * @return req - total item costs of repaing a players warn armour
+	 */
 	public ArrayList<ItemStack> repArmourAmount() {
 		HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
 		PlayerInventory inven = player.getInventory();
 		ItemStack[] armour = inven.getArmorContents();
+		// list of all the items needed to repair all warn armour
 		HashMap<String, Integer> totalCost = new HashMap<String, Integer>();
+		// for the players 4 armour slots
 		for (int i=0; i<armour.length; i++) {
 			String item = armour[i].getType().toString();
 			if (recipies.containsKey(item)) {
 				ArrayList<ItemStack> reqItems = recipies.get(item);
+				// get this armour piece's costs
 				for (int j =0; j<reqItems.size(); j++) {
+					// if we already have this cost, add to it
 					if(totalCost.containsKey(reqItems.get(j).getType().toString())) {
 						int amount = totalCost.get(reqItems.get(j).getType().toString());
 						totalCost.remove(reqItems.get(j).getType().toString());
 						int newAmount = amount + reqItems.get(j).getAmount();
 						totalCost.put(reqItems.get(j).getType().toString(), newAmount);
+					// otherwise add it to the list
 					} else {
 						totalCost.put(reqItems.get(j).getType().toString(), reqItems.get(j).getAmount());
 					}
 				}
 			}
 		}
+		// turn it back into a ItemStack array
 		ArrayList<ItemStack> req = new ArrayList<ItemStack>();
 		for (Object key: totalCost.keySet()) {
 			req.add(new ItemStack(Material.getMaterial(key.toString()), totalCost.get(key)));
@@ -223,6 +256,7 @@ public class AutoRepairSupport {
 		return req;
 	}
 
+	// sets the durability of a item back to no damage
 	public ItemStack repItem(ItemStack item) {
 		item.setDurability((short) 0);
 		return item;
@@ -243,6 +277,11 @@ public class AutoRepairSupport {
 
 	}
 
+	/**
+	 * Method to return the number of uses left in this tool
+	 * @param tool - tool to return uses left for
+	 * @return uses left of this tool
+	 */
 	public int returnUsesLeft(ItemStack tool) {
 		int usesLeft = -1;
 		if (tool.getType() == Material.WOOD_SPADE || tool.getType() == Material.WOOD_PICKAXE || 
@@ -274,6 +313,11 @@ public class AutoRepairSupport {
 		return usesLeft;
 	}
 
+	/**
+	 * Finds the smallest stack of an item in a players inventory
+	 * @param item - item to look for
+	 * @return slot the smallest stack is in
+	 */
 	@SuppressWarnings("unchecked")
 	public int findSmallest(ItemStack item) {
 		PlayerInventory inven = player.getInventory();
@@ -296,6 +340,11 @@ public class AutoRepairSupport {
 		return slot;
 	}
 
+	/**
+	 * Method to return the total amount of an item a player has
+	 * @param item - item to look for
+	 * @return total number of this item the player has
+	 */
 	@SuppressWarnings("unchecked")
 	public int getTotalItems(ItemStack item) {
 		int total = 0;
@@ -314,7 +363,7 @@ public class AutoRepairSupport {
 		return total;
 	}
 
-	// checks to see if the player has enough of a list of items
+	// checks to see if the player has enough of an item
 	public boolean isEnough(String itemName) {
 		ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(itemName);
 		boolean enoughItemFlag = true;
@@ -330,6 +379,7 @@ public class AutoRepairSupport {
 		return enoughItemFlag;
 	}
 
+	// checks to see if the player has enough of a list of items
 	public boolean isEnoughItems (ArrayList<ItemStack> req) {
 		boolean enough = true;
 		for (int i =0; i<req.size(); i++) {
@@ -343,6 +393,9 @@ public class AutoRepairSupport {
 		return enough;
 	}
 
+	/*
+	 * Methods to print the warning for lacking items and/or iConomy money
+	 */
 	public void iConWarn(String itemName, int total) {
 		getPlayer().sendMessage("§cYou are cannot afford to repair "  + itemName);
 		getPlayer().sendMessage("§cNeed: " + Misc.formatCurrency(total, iConomy.currency));
