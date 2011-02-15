@@ -25,7 +25,8 @@ public class Repair extends AutoRepairSupport{
 		PlayerInventory inven = getPlayer().getInventory();
 		HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
 		String itemName = Material.getMaterial(tool.getTypeId()).toString();
-		ArrayList<ItemStack> req = recipies.get(itemName);		
+		ArrayList<ItemStack> req = recipies.get(itemName);	
+		String toolString = tool.getType().toString();
 		int balance;
 
 		if (!AutoRepairPlugin.isRepairCosts()) {
@@ -33,7 +34,7 @@ public class Repair extends AutoRepairSupport{
 			inven.setItem(slot, repItem(tool));
 			// icon cost only
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-			if (AutoRepairPlugin.getiConCosts().containsKey(tool)) {
+			if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
 				balance = iConomy.db.get_balance(player.getName());
 				int cost = AutoRepairPlugin.getiConCosts().get(itemName);
 				if (cost <= balance) {
@@ -50,8 +51,8 @@ public class Repair extends AutoRepairSupport{
 			}
 			//both icon and item cost
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-			if (AutoRepairPlugin.getiConCosts().containsKey(tool)
-					&& AutoRepairPlugin.getRepairRecipies().containsKey(tool)) {
+			if (AutoRepairPlugin.getiConCosts().containsKey(toolString)
+					&& AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
 				balance = iConomy.db.get_balance(player.getName());
 
 				int cost = AutoRepairPlugin.getiConCosts().get(itemName);						
@@ -70,7 +71,7 @@ public class Repair extends AutoRepairSupport{
 			}
 			// just item cost
 		} else {
-			if (AutoRepairPlugin.getRepairRecipies().containsKey(tool)) {
+			if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
 				if (isEnoughItems(req)) {
 					deduct(req);
 					player.sendMessage("§3Using " + printFormatReqs(req) + " to repair " + itemName);
