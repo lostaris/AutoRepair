@@ -16,6 +16,12 @@ public class Repair extends AutoRepairSupport{
 		super(instance, getPlayer());
 	}
 
+	/**
+	 * Method to manually repair a players tool
+	 * @param tool - tool to repair
+	 * @param slot - inventory slot this tool is in
+	 * @return
+	 */
 	public boolean manualRepair(ItemStack tool, int slot) {
 		if (!AutoRepairPlugin.isAllowed(getPlayer(), "repair")) {
 			getPlayer().sendMessage("§cYou dont have permission to do the repair command.");

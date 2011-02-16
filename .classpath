@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Nick/Documents/Minecraft/bukkit-0.0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Nick/Documents/Minecraft/plugins/iConomy.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Nick/Documents/Minecraft/plugins/Permissions.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
