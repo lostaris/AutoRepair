@@ -375,6 +375,9 @@ public class AutoRepairSupport {
 	// checks to see if the player has enough of a list of items
 	public boolean isEnoughItems (ArrayList<ItemStack> req) {
 		boolean enough = true;
+		if (req == null) {
+			return false;
+		}
 		for (int i =0; i<req.size(); i++) {
 			ItemStack currItem = new ItemStack(req.get(i).getTypeId(), req.get(i).getAmount());
 			int neededAmount = req.get(i).getAmount();
