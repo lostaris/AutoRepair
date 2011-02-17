@@ -199,7 +199,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 			} else {
 				allowed = false;
 			}
-		}else if(!isPermissions && com.equalsIgnoreCase("access")) {
+		}else if(!isPermissions) {
 			allowed = true;
 		}
 		return allowed;

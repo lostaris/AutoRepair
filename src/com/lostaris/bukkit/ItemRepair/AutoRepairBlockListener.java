@@ -46,7 +46,7 @@ public class AutoRepairBlockListener extends BlockListener {
 			support.setLastWarning(false);
 		}
 
-		/*  If a tool has less than 10 durability left wart he player if needed
+		/*  If a tool has less than 10 durability left warn he player if needed
 		 *  else repair it
 		 */
 

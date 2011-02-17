@@ -98,7 +98,7 @@ public class Repair extends AutoRepairSupport{
 	 * @param slot the inventory slot this tool is in
 	 */
 	public boolean autoRepairTool(ItemStack tool, int slot) {
-		if (!AutoRepairPlugin.isAllowed(player, "auto")) { 
+		if (!AutoRepairPlugin.isAllowed(player, "auto") || !AutoRepairPlugin.isAutoRepair()) { 
 			return false;
 		}
 
@@ -173,8 +173,8 @@ public class Repair extends AutoRepairSupport{
 		return false;
 	}
 
-	/* Method to repair all the worn armour of a player
-	 * 
+	/** 
+	 * Method to repair all the worn armour of a player
 	 */
 	public void repairArmour() {
 		if (!AutoRepairPlugin.isAllowed(player, "repair")) {
