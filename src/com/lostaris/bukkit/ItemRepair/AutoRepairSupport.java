@@ -1,18 +1,16 @@
 package com.lostaris.bukkit.ItemRepair;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-
-import com.nijikokun.bukkit.iConomy.Misc;
-import com.nijikokun.bukkit.iConomy.iConomy;
+import com.nijiko.coelho.iConomy.iConomy;
 
 /**
  * Supplementary methods for AutoRepair
@@ -47,16 +45,16 @@ public class AutoRepairSupport {
 			// just icon cost
 			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
 				if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
-					player.sendMessage("§6It costs " + Misc.formatCurrency(
-							AutoRepairPlugin.getiConCosts().get(toolString), iConomy.currency)
+					player.sendMessage("§6It costs " + iConomy.getBank().format(
+							AutoRepairPlugin.getiConCosts().get(toolString))
 							+ " to repair " + tool.getType());
 				}
 				//both icon cost and item cost
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 				if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString) &&
 						AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
-					player.sendMessage("§6To repair " + tool.getType() + " you need: " +Misc.formatCurrency(
-							AutoRepairPlugin.getiConCosts().get(toolString), iConomy.currency) + " and");
+					player.sendMessage("§6To repair " + tool.getType() + " you need: " + iConomy.getBank().format(
+							AutoRepairPlugin.getiConCosts().get(toolString)) + " and");
 					player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));
 				}
 				// just item cost
@@ -106,11 +104,11 @@ public class AutoRepairSupport {
 						player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 						/* if there is repair costs  and no auto repair */
 					} else if (AutoRepairPlugin.isRepairCosts() && !AutoRepairPlugin.isAutoRepair()) {
-						int balance;
+						double balance;
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
-							balance = iConomy.db.get_balance(player.getName());
+							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 							if (cost > balance) {
 								iConWarn(toolString, cost);
@@ -118,7 +116,7 @@ public class AutoRepairSupport {
 							// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
-							balance = iConomy.db.get_balance(player.getName());
+							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 							if (cost > balance || !isEnoughItems(reqItems)) {
@@ -134,11 +132,11 @@ public class AutoRepairSupport {
 						}
 						/* there is auto repairing and repair costs */
 					} else {
-						int balance;
+						double balance;
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
-							balance = iConomy.db.get_balance(player.getName());
+							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
 							if (cost > balance) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 								iConWarn(toolString, cost);
@@ -147,7 +145,7 @@ public class AutoRepairSupport {
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
-							balance = iConomy.db.get_balance(player.getName());
+							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
 							if (cost > balance || !isEnoughItems(reqItems)) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 								bothWarn(toolString, cost, reqItems);
@@ -194,7 +192,7 @@ public class AutoRepairSupport {
 							}				
 						}
 						player.sendMessage("§6To repair all your armour you need: "
-								+ Misc.formatCurrency(total, iConomy.currency));						
+								+ iConomy.getBank().format(iConomy.getBank().getCurrency()));						
 						//both icon and item cost
 					} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 						for (ItemStack i : inven.getArmorContents()) {				
@@ -203,7 +201,7 @@ public class AutoRepairSupport {
 							}				
 						}						
 						player.sendMessage("§6To repair all your armour you need: "
-								+ Misc.formatCurrency(total, iConomy.currency));
+								+ iConomy.getBank().format(iConomy.getBank().getCurrency()));
 						player.sendMessage("§6" + this.printFormatReqs(req));		
 						// just item cost
 					} else {
@@ -403,13 +401,13 @@ public class AutoRepairSupport {
 	 */
 	public void iConWarn(String itemName, int total) {
 		getPlayer().sendMessage("§cYou cannot afford to repair "  + itemName);
-		getPlayer().sendMessage("§cNeed: " + Misc.formatCurrency(total, iConomy.currency));
+		getPlayer().sendMessage("§cNeed: " + iConomy.getBank().format(iConomy.getBank().getCurrency()));
 	}
 
 	public void bothWarn(String itemName, int total, ArrayList<ItemStack> req) {
 		getPlayer().sendMessage("§cYou are missing one or more items to repair " + itemName);
 		getPlayer().sendMessage("§cNeed: " + printFormatReqs(req) + " and " +
-				Misc.formatCurrency(total, iConomy.currency));
+				iConomy.getBank().format(iConomy.getBank().getCurrency()));
 	}
 
 	public void justItemsWarn(String itemName, ArrayList<ItemStack> req) {

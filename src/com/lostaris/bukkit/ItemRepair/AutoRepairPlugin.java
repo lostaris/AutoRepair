@@ -1,28 +1,29 @@
 package com.lostaris.bukkit.ItemRepair;
+
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
+import org.bukkit.event.server.PluginEvent;
+import org.bukkit.event.server.ServerListener;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 import com.nijikokun.bukkit.Permissions.Permissions;
+import com.nijiko.coelho.iConomy.iConomy;
 import com.nijiko.permissions.PermissionHandler;
 import org.bukkit.plugin.Plugin;
 
 /**
  * Auto repair plugin for bukkit
  *
- * @author lostaris
+ * @author Lostaris
  */
 public class AutoRepairPlugin extends JavaPlugin {
 	private final AutoRepairBlockListener blockListener = new AutoRepairBlockListener(this);
@@ -37,22 +38,25 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public static boolean isPermissions = false;
 	public static final Logger log = Logger.getLogger("Minecraft");
 	public Repair repair = new Repair(this);
+	public static iConomy iConomy;
+	private PluginListener Listener = new PluginListener(this);
 
-	public AutoRepairPlugin(PluginLoader pluginLoader, Server instance,
+	/*public AutoRepairPlugin(PluginLoader pluginLoader, Server instance,
 			PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
 		super(pluginLoader, instance, desc, folder, plugin, cLoader);
 		// TODO: Place any custom initialisation code here
 
 		// NOTE: Event registration should be done in onEnable not here as all events are
 		// unregistered when a plugin is disabled
-	}
+	}*/
 
 	public void onEnable() {
 		//  Place any custom enable code here including the registration of any events
-
+		//Listener = new Listener();
 		// Register our events
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.BLOCK_DAMAGED , blockListener, Priority.Monitor, this);
+		pm.registerEvent(Event.Type.PLUGIN_ENABLE, Listener, Priority.Monitor, this);
+		pm.registerEvent(Event.Type.BLOCK_DAMAGED , blockListener, Priority.Monitor, this);		
 
 		// EXAMPLE: Custom code, here we just output some info so we can check all is well
 		PluginDescriptionFile pdfFile = this.getDescription();
@@ -103,20 +107,20 @@ public class AutoRepairPlugin extends JavaPlugin {
 				} else {
 					player.sendMessage("§cYou dont have permission to do the repair command.");
 				}
-			// we have further arguments
+				// we have further arguments
 			} else if (split.length == 1) {
 				try {
 					char repairList = split[0].charAt(0);
 					// /rep ?
 					if (repairList == '?') {						
 						support.toolReq(player.getItemInHand());
-					// /rep dmg
+						// /rep dmg
 					} else if (split[0].equalsIgnoreCase("dmg")) {						
 						support.durabilityLeft(inven.getItem(inven.getHeldItemSlot()));
-					// /rep arm
+						// /rep arm
 					} else if (split[0].equalsIgnoreCase("arm")) {						
 						repair.repairArmour();
-					// /rep reload
+						// /rep reload
 					} else if(split[0].equalsIgnoreCase("reload")) {
 						if (isAllowed(player, "reload")){ 
 							refreshConfig();
@@ -125,7 +129,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 							player.sendMessage("§cYou dont have permission to do the reload command.");
 						}
 					}else {
-					// rep [itemslot]
+						// rep [itemslot]
 						if (isAllowed(player, "repair")) {
 							itemSlot = Integer.parseInt(split[0]);
 							if (itemSlot >0 && itemSlot <=9) {
@@ -141,14 +145,14 @@ public class AutoRepairPlugin extends JavaPlugin {
 				} catch (Exception e) {
 					return false;
 				}
-			// /rep arm ?
+				// /rep arm ?
 			}else if (split.length == 2 && split[0].equalsIgnoreCase("arm") && split[1].length() ==1) {
 				if (isAllowed(player, "info")) { 
 					support.repArmourInfo(split[1]);
 				} else {
 					player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
 				}
-			// /rep [itemslot] ?
+				// /rep [itemslot] ?
 			}else if ((split.length == 2 && split[1].length() ==1)) {
 				try {
 					char getRecipe = split[1].charAt(0);
@@ -163,7 +167,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 				} catch (Exception e) {
 					return false;
 				}
-			// /rep [itemslot] dmg
+				// /rep [itemslot] dmg
 			} else if (split.length == 2 && split[1].equalsIgnoreCase("dmg")) {
 				try {
 					if (isAllowed(player, "info")) {
@@ -270,6 +274,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 				} if (getSettings().get("permissions").equals("true")) {
 					Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
 					if(test != null) {
+						this.getServer().getPluginManager().enablePlugin(test);
 						AutoRepairPlugin.Permissions = ((Permissions)test).getHandler();
 						AutoRepairPlugin.isPermissions = true;
 					}
@@ -308,7 +313,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 					iConomy.put(item, amount);
 				} catch (Exception e) {
 				}
-			// this line doesnt have an iConomy value
+				// this line doesnt have an iConomy value
 			} else {
 				recipiesString = line.substring(keyPosition+1, line.length()).trim();
 			}
@@ -334,6 +339,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 
 		if(AutoRepairPlugin.Permissions == null) {
 			if(test != null) {
+				this.getServer().getPluginManager().enablePlugin(test);
 				AutoRepairPlugin.Permissions = ((Permissions)test).getHandler();
 				AutoRepairPlugin.isPermissions = true;
 			} else {
@@ -341,7 +347,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 			}
 		}
 	}
-	
+
 	/**
 	 * Checks to see if the iConomy plugin is installed
 	 * @return
@@ -414,4 +420,18 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public static HashMap<String, Integer> getiConCosts() {
 		return iConCosts;
 	}
+	
+	private class PluginListener extends ServerListener {
+
+		public PluginListener(final AutoRepairPlugin plugin) {
+        }
+
+        @Override
+        public void onPluginEnabled(PluginEvent event) {
+            if(event.getPlugin().getDescription().getName().equals("iConomy")) {
+                AutoRepairPlugin.iConomy = (iConomy)event.getPlugin();
+                log.info("[AutoRepair] Attached to iConomy.");
+            }
+        }
+    }
 }

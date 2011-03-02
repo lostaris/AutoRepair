@@ -6,8 +6,8 @@ import java.util.logging.Logger;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import com.nijikokun.bukkit.iConomy.Misc;
-import com.nijikokun.bukkit.iConomy.iConomy;
+import com.nijiko.coelho.iConomy.iConomy;
+import com.nijiko.coelho.iConomy.system.Account;
 
 public class Repair extends AutoRepairSupport{
 	public static final Logger log = Logger.getLogger("Minecraft");
@@ -22,6 +22,7 @@ public class Repair extends AutoRepairSupport{
 	 * @param slot - inventory slot this tool is in
 	 * @return
 	 */
+	@SuppressWarnings("static-access")
 	public boolean manualRepair(ItemStack tool, int slot) {
 		if (!AutoRepairPlugin.isAllowed(getPlayer(), "repair")) {
 			getPlayer().sendMessage("§cYou dont have permission to do the repair command.");
@@ -33,7 +34,8 @@ public class Repair extends AutoRepairSupport{
 		String itemName = Material.getMaterial(tool.getTypeId()).toString();
 		ArrayList<ItemStack> req = recipies.get(itemName);	
 		String toolString = tool.getType().toString();
-		int balance;
+		double balance;
+		Account account;
 
 		if (!AutoRepairPlugin.isRepairCosts()) {
 			getPlayer().sendMessage("§3Repaired " + itemName);
@@ -41,13 +43,13 @@ public class Repair extends AutoRepairSupport{
 			// icon cost only
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 			if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
-				balance = iConomy.db.get_balance(player.getName());
+				balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
+				account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
 				int cost = AutoRepairPlugin.getiConCosts().get(itemName);
 				if (cost <= balance) {
-					//balance = iConomy.db.get_balance(player.getName());
-					iConomy.db.set_balance(player.getName(), balance - cost);
-					player.sendMessage("§3Using " + Misc.formatCurrency(cost, iConomy.currency) + " to repair " + itemName);
-					//inven.setItem(slot, repItem(tool));
+					account.subtract(cost);
+					account.save();
+					player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " to repair " + itemName);
 					inven.setItem(slot, repItem(tool));
 				} else {
 					iConWarn(itemName, cost);
@@ -59,14 +61,14 @@ public class Repair extends AutoRepairSupport{
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 			if (AutoRepairPlugin.getiConCosts().containsKey(toolString)
 					&& AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
-				balance = iConomy.db.get_balance(player.getName());
-
+				balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
+				account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
 				int cost = AutoRepairPlugin.getiConCosts().get(itemName);						
 				if (cost <= balance && isEnoughItems(req)) {
-					//balance = iConomy.db.get_balance(player.getName());
-					iConomy.db.set_balance(player.getName(), balance - cost);
+					account.subtract(cost);
 					deduct(req);
-					player.sendMessage("§3Using " + Misc.formatCurrency(cost, iConomy.currency) + " and");
+					account.save();
+					player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " and");
 					player.sendMessage("§3" + printFormatReqs(req) + " to repair "  + itemName);
 					inven.setItem(slot, repItem(tool));
 				} else {
@@ -97,6 +99,7 @@ public class Repair extends AutoRepairSupport{
 	 * @param tool the item to repair
 	 * @param slot the inventory slot this tool is in
 	 */
+	@SuppressWarnings("static-access")
 	public boolean autoRepairTool(ItemStack tool, int slot) {
 		if (!AutoRepairPlugin.isAllowed(player, "auto") || !AutoRepairPlugin.isAutoRepair()) { 
 			return false;
@@ -106,7 +109,8 @@ public class Repair extends AutoRepairSupport{
 		HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
 		String itemName = Material.getMaterial(tool.getTypeId()).toString();
 		ArrayList<ItemStack> req = recipies.get(itemName);		
-		int balance;
+		double balance;
+		Account account;
 
 		// free repairing
 		if (!AutoRepairPlugin.isRepairCosts()) {
@@ -114,13 +118,15 @@ public class Repair extends AutoRepairSupport{
 			inven.setItem(slot, repItem(tool));
 			// icon cost only
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-			balance = iConomy.db.get_balance(player.getName());
+			balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
+			account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
 			int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+			
 			// the user can afford to repair
 			if (cost <= balance) {
-				balance = iConomy.db.get_balance(player.getName());
-				iConomy.db.set_balance(player.getName(), balance - cost);
-				player.sendMessage("§3Using " + Misc.formatCurrency(cost, iConomy.currency) + " to repair " + itemName);
+				account.subtract(cost);
+				account.save();
+				player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " to repair " + itemName);
 				inven.setItem(slot, repItem(tool));
 			// the user cannot afford to repair
 			} else {
@@ -133,14 +139,15 @@ public class Repair extends AutoRepairSupport{
 			}
 			//both icon and item cost
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-			balance = iConomy.db.get_balance(player.getName());
+			balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
+			account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
 			int cost = AutoRepairPlugin.getiConCosts().get(itemName);
 			// the user can afford to repair
 			if (cost <= balance && isEnoughItems(req)) {
-				balance = iConomy.db.get_balance(player.getName());
-				iConomy.db.set_balance(player.getName(), balance - cost);
+				account.subtract(cost);
+				account.save();
 				deduct(req);
-				player.sendMessage("§3Using " + Misc.formatCurrency(cost, iConomy.currency) + " and");
+				player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " and");
 				player.sendMessage("§3" + printFormatReqs(req) + " to repair "  + itemName);
 				inven.setItem(slot, repItem(tool));
 			// the user cannot afford to repair
@@ -176,6 +183,7 @@ public class Repair extends AutoRepairSupport{
 	/** 
 	 * Method to repair all the worn armour of a player
 	 */
+	@SuppressWarnings("static-access")
 	public void repairArmour() {
 		if (!AutoRepairPlugin.isAllowed(player, "repair")) {
 			player.sendMessage("§cYou dont have permission to do the repair command.");
@@ -185,14 +193,16 @@ public class Repair extends AutoRepairSupport{
 		PlayerInventory inven = player.getInventory();
 		ArrayList<ItemStack> req = repArmourAmount();
 		int total =0;
-		int balance;
+		double balance;
+		Account account;
 
 		if (!AutoRepairPlugin.isRepairCosts()) {
 			player.sendMessage("§3Repaired your armour");
 			repArm();
 			// icon cost only
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-			balance = iConomy.db.get_balance(player.getName());
+			balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
+			account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
 
 			for (ItemStack i : inven.getArmorContents()) {				
 				if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
@@ -200,33 +210,32 @@ public class Repair extends AutoRepairSupport{
 				}				
 			}
 			if (total <= balance) {
-				balance = iConomy.db.get_balance(player.getName());
-				iConomy.db.set_balance(player.getName(), balance - total);
-				player.sendMessage("§3Using " + Misc.formatCurrency(total, iConomy.currency) + " to repair your armour");
+				account.subtract(total); //iConomy.db.set_balance(player.getName(), balance - total);
+				player.sendMessage("§3Using " + iConomy.getBank().format(total) + " to repair your armour");
 				repArm();
 			} else {
 				player.sendMessage("§cYou are cannot afford to repair your armour");
-				player.sendMessage("§cNeed: " + Misc.formatCurrency(total, iConomy.currency));
+				player.sendMessage("§cNeed: " + iConomy.getBank().format(total));
 			}
 			//both icon and item cost
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-			balance = iConomy.db.get_balance(player.getName());
+			balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
+			account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
+			
 			for (ItemStack i : inven.getArmorContents()) {				
 				if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
 					total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
 				}				
 			}						
 			if (total <= balance && isEnoughItems(req)) {
-				balance = iConomy.db.get_balance(player.getName());
-				iConomy.db.set_balance(player.getName(), balance - total);
+				account.subtract(total); //iConomy.db.set_balance(player.getName(), balance - total);
 				deduct(req);
-				player.sendMessage("§3Using " + Misc.formatCurrency(total, iConomy.currency) + " and");
+				player.sendMessage("§3Using " + iConomy.getBank().format(total) + " and");
 				player.sendMessage("§3" + printFormatReqs(req) + " to repair your armour");
 				repArm();
 			} else {
 				player.sendMessage("§cYou are missing one or more items to repair your armour");
-				player.sendMessage("§cNeed: " + printFormatReqs(req) + " and " +
-						Misc.formatCurrency(total, iConomy.currency));
+				player.sendMessage("§cNeed: " + printFormatReqs(req) + " and " + iConomy.getBank().format(total));
 			}			
 			// just item cost
 		} else {
