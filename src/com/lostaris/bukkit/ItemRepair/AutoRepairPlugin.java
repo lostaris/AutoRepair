@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
+
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.server.PluginEvent;
@@ -40,6 +42,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public Repair repair = new Repair(this);
 	public static iConomy iConomy;
 	private PluginListener Listener = new PluginListener(this);
+	public HashMap<Integer, Integer> durability = new HashMap<Integer, Integer>();
 
 	/*public AutoRepairPlugin(PluginLoader pluginLoader, Server instance,
 			PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
@@ -63,6 +66,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 		log.info( pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled" );
 		setupPermissions();
 		refreshConfig();
+		fillDurability();
 	}
 	public void onDisable() {
 		//  Place any custom disable code here
@@ -419,6 +423,50 @@ public class AutoRepairPlugin extends JavaPlugin {
 
 	public static HashMap<String, Integer> getiConCosts() {
 		return iConCosts;
+	}
+	
+	public void fillDurability() {
+		durability.put(Material.GOLD_AXE.getId(), 32);
+		durability.put(Material.GOLD_HOE.getId(), 32);
+		durability.put(Material.GOLD_PICKAXE.getId(), 32);
+		durability.put(Material.GOLD_SPADE.getId(), 32);
+		durability.put(Material.GOLD_SWORD.getId(), 32);
+		durability.put(Material.WOOD_SPADE.getId(), 59);
+		durability.put(Material.WOOD_AXE.getId(), 59);
+		durability.put(Material.WOOD_HOE.getId(), 59);
+		durability.put(Material.WOOD_PICKAXE.getId(), 59);
+		durability.put(Material.WOOD_SWORD.getId(), 59);
+		durability.put(Material.STONE_AXE.getId(), 131);
+		durability.put(Material.STONE_HOE.getId(), 131);
+		durability.put(Material.STONE_PICKAXE.getId(), 131);
+		durability.put(Material.STONE_SPADE.getId(), 131);
+		durability.put(Material.STONE_SWORD.getId(), 131);
+		durability.put(Material.IRON_AXE.getId(), 250);
+		durability.put(Material.IRON_HOE.getId(), 250);
+		durability.put(Material.IRON_PICKAXE.getId(), 250);
+		durability.put(Material.IRON_SPADE.getId(), 250);
+		durability.put(Material.IRON_SWORD.getId(), 250);
+		durability.put(Material.DIAMOND_AXE.getId(), 1561);
+		durability.put(Material.DIAMOND_HOE.getId(), 1561);
+		durability.put(Material.DIAMOND_PICKAXE.getId(), 1561);
+		durability.put(Material.DIAMOND_SPADE.getId(), 1561);
+		durability.put(Material.DIAMOND_SWORD.getId(), 1561);
+		durability.put(Material.LEATHER_BOOTS.getId(), 39);
+		durability.put(Material.LEATHER_CHESTPLATE.getId(), 47);
+		durability.put(Material.LEATHER_HELMET.getId(), 33);
+		durability.put(Material.LEATHER_LEGGINGS.getId(), 45);
+		durability.put(Material.IRON_BOOTS.getId(), 159);
+		durability.put(Material.IRON_CHESTPLATE.getId(), 191);
+		durability.put(Material.IRON_HELMET.getId(), 33);
+		durability.put(Material.IRON_LEGGINGS.getId(), 183);
+		durability.put(Material.DIAMOND_BOOTS.getId(), 319);
+		durability.put(Material.DIAMOND_CHESTPLATE.getId(), 383);
+		durability.put(Material.DIAMOND_HELMET.getId(), 271);
+		durability.put(Material.DIAMOND_LEGGINGS.getId(), 363);
+		durability.put(Material.GOLD_BOOTS.getId(), 79);
+		durability.put(Material.GOLD_CHESTPLATE.getId(), 95);
+		durability.put(Material.GOLD_HELMET.getId(), 67);
+		durability.put(Material.GOLD_LEGGINGS.getId(), 91);
 	}
 	
 	private class PluginListener extends ServerListener {

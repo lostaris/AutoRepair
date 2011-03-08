@@ -33,6 +33,7 @@ public class AutoRepairSupport {
 	private boolean warning = false;
 	private boolean lastWarning = false;
 	public static final Logger log = Logger.getLogger("Minecraft");
+	
 
 	/**
 	 * Method to return to the player the required items and/or iConomy cash needed for a repair
@@ -42,36 +43,42 @@ public class AutoRepairSupport {
 		// if the player has permission to do this command
 		if (AutoRepairPlugin.isAllowed(player, "info")) {
 			String toolString = tool.getType().toString();
+			// if its not a tool stop here
+			if (!AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
+				player.sendMessage("§6This is not a tool.");
+				return;
+			}
 			// just icon cost
 			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
 				if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
-					player.sendMessage("§6It costs " + iConomy.getBank().format(
-							AutoRepairPlugin.getiConCosts().get(toolString))
-							+ " to repair " + tool.getType());
+					player.sendMessage("§6For this " + tool.getType() + " it costs " +  iConomy.getBank().format(costICon(tool))							
+							+ " to repair now, or " + iConomy.getBank().format(AutoRepairPlugin.getiConCosts().get(toolString))
+							+ " to repair the full durability");
 				}
 				//both icon cost and item cost
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 				if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString) &&
 						AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
-					player.sendMessage("§6To repair " + tool.getType() + " you need: " + iConomy.getBank().format(
-							AutoRepairPlugin.getiConCosts().get(toolString)) + " and");
-					player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));
+					player.sendMessage("§6For this " + tool.getType() + " to repair now you need: " +
+							iConomy.getBank().format(costICon(tool)) + " and");
+					player.sendMessage("§6" + printFormatReqsCost(AutoRepairPlugin.getRepairRecipies().get(toolString), tool));
+					player.sendMessage("§6Or to repair the full durability you need: " + iConomy.getBank().format(
+							AutoRepairPlugin.getiConCosts().get(toolString)));
+					player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));					
 				}
 				// just item cost
 			} else if (AutoRepairPlugin.isRepairCosts()) {
 				//tests to see if the config file has a repair reference to the item they wish to repair
 				if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
-					player.sendMessage("§6To repair " + tool.getType() + " you need:");
+					player.sendMessage("§6For this " + tool.getType() + " to repair now you need: ");					
+					player.sendMessage("§6" + printFormatReqsCost(AutoRepairPlugin.getRepairRecipies().get(toolString), tool));
+					player.sendMessage("§6Or to repair the full durability you need:");
 					player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));
 				}
 			} else {
 				player.sendMessage("§3No materials needed to repair");
 				//return true;
-			} 
-			if (!AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
-				player.sendMessage("§6This is not a tool.");
 			}
-
 		} else {
 			player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
 		}
@@ -88,6 +95,10 @@ public class AutoRepairSupport {
 		// if the player has permission to do this command
 		if (!AutoRepairPlugin.isAllowed(player, "warn")) { 
 			return;
+		}
+		// if there is free repairing and it will auto repair we dont need to warn
+		if (!AutoRepairPlugin.isRepairCosts() && AutoRepairPlugin.isAutoRepair()) {
+			return;						
 		}
 
 		HashMap<String, ArrayList<ItemStack>> repairRecipies;
@@ -188,28 +199,31 @@ public class AutoRepairSupport {
 					if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 						for (ItemStack i : inven.getArmorContents()) {				
 							if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
-								total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+								//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+								total += costICon(i);
 							}				
 						}
 						player.sendMessage("§6To repair all your armour you need: "
-								+ iConomy.getBank().format(iConomy.getBank().getCurrency()));						
+								+ iConomy.getBank().format(total));						
 						//both icon and item cost
 					} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 						for (ItemStack i : inven.getArmorContents()) {				
 							if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
-								total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
-							}				
-						}						
+								//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+								total += costICon(i);
+							}
+						}
 						player.sendMessage("§6To repair all your armour you need: "
-								+ iConomy.getBank().format(iConomy.getBank().getCurrency()));
-						player.sendMessage("§6" + this.printFormatReqs(req));		
+								+ iConomy.getBank().format(total));
+						player.sendMessage("§6" + printFormatReqs(req));		
 						// just item cost
 					} else {
 						player.sendMessage("§6To repair all your armour you need:");
-						player.sendMessage("§6" + this.printFormatReqs(req));
+						player.sendMessage("§6" + printFormatReqs(req));
 					}
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
 				return false;
 			}
 		} else {
@@ -219,8 +233,8 @@ public class AutoRepairSupport {
 	}
 
 	/**
-	 * Method to return the total item cost of repairing a players warn armour
-	 * @return req - total item costs of repaing a players warn armour
+	 * Method to return the total item cost of repairing a players worn armour
+	 * @return req - total item costs of repairing a players warn armour
 	 */
 	public ArrayList<ItemStack> repArmourAmount() {
 		HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
@@ -251,7 +265,8 @@ public class AutoRepairSupport {
 		// turn it back into a ItemStack array
 		ArrayList<ItemStack> req = new ArrayList<ItemStack>();
 		for (Object key: totalCost.keySet()) {
-			req.add(new ItemStack(Material.getMaterial(key.toString()), totalCost.get(key)));
+			//req.add(new ItemStack(Material.getMaterial(key.toString()), totalCost.get(key)));
+			req.add(new ItemStack(Material.getMaterial(key.toString()), (int) (totalCost.get(key) * armPercentDmg())));
 		}
 		return req;
 	}
@@ -267,7 +282,7 @@ public class AutoRepairSupport {
 		if (AutoRepairPlugin.isAllowed(player, "info")) { //!AutoRepairPlugin.isPermissions || AutoRepairPlugin.Permissions.has(player, "AutoRepair.info")) {
 			int usesLeft = this.returnUsesLeft(tool);
 			if (usesLeft != -1) {
-				player.sendMessage("§3" + usesLeft + " blocks left untill this tool breaks." );
+				player.sendMessage("§3" + usesLeft + " blocks left untill this tool breaks. "  + percentDmg(tool));
 			} else {
 				player.sendMessage("§6This is not a tool.");
 			}
@@ -379,6 +394,54 @@ public class AutoRepairSupport {
 		return enoughItemFlag;
 	}
 
+	public double armPercentDmg() {
+		PlayerInventory inven = player.getInventory();
+		ItemStack[] armour = inven.getArmorContents();
+		double totalDmg = 0;
+		double totalDurability = 0;
+		for (ItemStack i : armour) {
+			totalDmg += i.getDurability();
+			totalDurability += plugin.durability.get(i.getTypeId());
+		}
+		double percent = (totalDmg / totalDurability);
+		return percent;
+	}
+	
+	public double percentDmg(ItemStack tool) {
+		double percentage = 0.0;
+		if (plugin.durability.containsKey(tool.getTypeId())) {
+			double maxDur = plugin.durability.get(tool.getTypeId());
+			double currentDur = tool.getDurability();
+			percentage = (currentDur / maxDur);
+		}
+		return percentage;
+	}
+	
+	public int costItem(ItemStack tool, ItemStack reqItem){
+		int cost = (int) (reqItem.getAmount() * percentDmg(tool));
+		if (cost < 1) {
+			return 1;
+		} else {
+			return cost;
+		}
+	}
+	
+	public int costICon(ItemStack tool) {
+		int cost = (int) (AutoRepairPlugin.getiConCosts().get(tool.getType().toString()) * percentDmg(tool));
+		if (cost < 1) {
+			return 1;
+		} else {
+			return cost;
+		}
+	}
+	
+	public ArrayList<ItemStack> partialReq(ArrayList<ItemStack> req, ItemStack tool) {
+		for (ItemStack i : req) {
+			i.setAmount(costItem(tool, i));
+		}		
+		return req;		
+	}
+	
 	// checks to see if the player has enough of a list of items
 	public boolean isEnoughItems (ArrayList<ItemStack> req) {
 		boolean enough = true;
@@ -401,13 +464,13 @@ public class AutoRepairSupport {
 	 */
 	public void iConWarn(String itemName, int total) {
 		getPlayer().sendMessage("§cYou cannot afford to repair "  + itemName);
-		getPlayer().sendMessage("§cNeed: " + iConomy.getBank().format(iConomy.getBank().getCurrency()));
+		getPlayer().sendMessage("§cNeed: " + iConomy.getBank().format(total));
 	}
 
 	public void bothWarn(String itemName, int total, ArrayList<ItemStack> req) {
 		getPlayer().sendMessage("§cYou are missing one or more items to repair " + itemName);
 		getPlayer().sendMessage("§cNeed: " + printFormatReqs(req) + " and " +
-				iConomy.getBank().format(iConomy.getBank().getCurrency()));
+				iConomy.getBank().format(total));
 	}
 
 	public void justItemsWarn(String itemName, ArrayList<ItemStack> req) {
@@ -420,6 +483,15 @@ public class AutoRepairSupport {
 		string.append(" ");
 		for (int i = 0; i < items.size(); i++) {
 			string.append(items.get(i).getAmount() + " " + items.get(i).getType() + " ");
+		}
+		return string.toString();
+	}
+	
+	public String printFormatReqsCost(ArrayList<ItemStack> items, ItemStack tool) {
+		StringBuffer string = new StringBuffer();
+		string.append(" ");
+		for (int i = 0; i < items.size(); i++) {
+			string.append(costItem(tool, items.get(i)) + " " + items.get(i).getType() + " ");
 		}
 		return string.toString();
 	}

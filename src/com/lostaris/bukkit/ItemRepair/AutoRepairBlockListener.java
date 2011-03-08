@@ -1,4 +1,6 @@
 package com.lostaris.bukkit.ItemRepair;
+import java.util.HashMap;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockDamageEvent;
@@ -20,6 +22,7 @@ public class AutoRepairBlockListener extends BlockListener {
 	private final int diamondDurability = 1561;
 	public AutoRepairSupport support;
 	public Repair repair;
+	public HashMap<Integer, Integer> durability = new HashMap<Integer, Integer>();
 
 	public AutoRepairBlockListener(final AutoRepairPlugin plugin) {
 		this.plugin = plugin;
@@ -46,7 +49,7 @@ public class AutoRepairBlockListener extends BlockListener {
 			support.setLastWarning(false);
 		}
 
-		/*  If a tool has less than 10 durability left warn he player if needed
+		/*  If a tool has less than 10 durability left warn the player if needed
 		 *  else repair it
 		 */
 

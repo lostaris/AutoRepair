@@ -45,7 +45,8 @@ public class Repair extends AutoRepairSupport{
 			if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
 				balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
 				account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
-				int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+				//int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+				int cost = costICon(tool);
 				if (cost <= balance) {
 					account.subtract(cost);
 					account.save();
@@ -63,8 +64,11 @@ public class Repair extends AutoRepairSupport{
 					&& AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
 				balance = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName()).getBalance();
 				account = AutoRepairPlugin.iConomy.getBank().getAccount(player.getName());
-				int cost = AutoRepairPlugin.getiConCosts().get(itemName);						
-				if (cost <= balance && isEnoughItems(req)) {
+				//int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+				int cost = costICon(tool);
+				ArrayList<ItemStack> newReq = partialReq(req, tool);
+				//if (cost <= balance && isEnoughItems(req)) {
+				if (cost <= balance && isEnoughItems(newReq)) {
 					account.subtract(cost);
 					deduct(req);
 					account.save();
@@ -80,7 +84,9 @@ public class Repair extends AutoRepairSupport{
 			// just item cost
 		} else {
 			if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
-				if (isEnoughItems(req)) {
+				ArrayList<ItemStack> newReq = partialReq(req, tool);
+				//if (isEnoughItems(req)) {
+				if (isEnoughItems(newReq)) {
 					deduct(req);
 					player.sendMessage("§3Using " + printFormatReqs(req) + " to repair " + itemName);
 					inven.setItem(slot, repItem(tool));
@@ -206,7 +212,8 @@ public class Repair extends AutoRepairSupport{
 
 			for (ItemStack i : inven.getArmorContents()) {				
 				if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
-					total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+					//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+					total += costICon(i);
 				}				
 			}
 			if (total <= balance) {
@@ -224,7 +231,8 @@ public class Repair extends AutoRepairSupport{
 			
 			for (ItemStack i : inven.getArmorContents()) {				
 				if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
-					total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+					//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+					total += costICon(i);
 				}				
 			}						
 			if (total <= balance && isEnoughItems(req)) {
