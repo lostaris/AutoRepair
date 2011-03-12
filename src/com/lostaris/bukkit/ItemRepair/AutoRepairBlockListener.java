@@ -1,5 +1,4 @@
 package com.lostaris.bukkit.ItemRepair;
-import java.util.HashMap;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -22,7 +21,6 @@ public class AutoRepairBlockListener extends BlockListener {
 	private final int diamondDurability = 1561;
 	public AutoRepairSupport support;
 	public Repair repair;
-	public HashMap<Integer, Integer> durability = new HashMap<Integer, Integer>();
 
 	public AutoRepairBlockListener(final AutoRepairPlugin plugin) {
 		this.plugin = plugin;

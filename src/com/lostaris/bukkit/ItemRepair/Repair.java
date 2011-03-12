@@ -32,7 +32,7 @@ public class Repair extends AutoRepairSupport{
 		PlayerInventory inven = getPlayer().getInventory();
 		HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
 		String itemName = Material.getMaterial(tool.getTypeId()).toString();
-		ArrayList<ItemStack> req = recipies.get(itemName);	
+		ArrayList<ItemStack> req = recipies.get(itemName);
 		String toolString = tool.getType().toString();
 		double balance;
 		Account account;
@@ -70,13 +70,13 @@ public class Repair extends AutoRepairSupport{
 				//if (cost <= balance && isEnoughItems(req)) {
 				if (cost <= balance && isEnoughItems(newReq)) {
 					account.subtract(cost);
-					deduct(req);
+					deduct(newReq);
 					account.save();
 					player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " and");
-					player.sendMessage("§3" + printFormatReqs(req) + " to repair "  + itemName);
+					player.sendMessage("§3" + printFormatReqs(newReq) + " to repair "  + itemName);
 					inven.setItem(slot, repItem(tool));
 				} else {
-					bothWarn(itemName, cost, req);
+					bothWarn(itemName, cost, newReq);
 				}
 			} else {
 				player.sendMessage("§cThis is not a tool");
@@ -87,17 +87,15 @@ public class Repair extends AutoRepairSupport{
 				ArrayList<ItemStack> newReq = partialReq(req, tool);
 				//if (isEnoughItems(req)) {
 				if (isEnoughItems(newReq)) {
-					deduct(req);
-					player.sendMessage("§3Using " + printFormatReqs(req) + " to repair " + itemName);
+					deduct(newReq);
 					inven.setItem(slot, repItem(tool));
 				} else {
-					justItemsWarn(itemName, req);
+					justItemsWarn(itemName, newReq);
 				}
 			} else {
 				player.sendMessage("§cThis is not a tool");
 			}
 		}
-
 		return false;		
 	}
 

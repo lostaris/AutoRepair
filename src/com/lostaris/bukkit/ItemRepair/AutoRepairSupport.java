@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -333,23 +334,15 @@ public class AutoRepairSupport {
 	 * @param item - item to look for
 	 * @return slot the smallest stack is in
 	 */
-	@SuppressWarnings("unchecked")
 	public int findSmallest(ItemStack item) {
 		PlayerInventory inven = player.getInventory();
 		HashMap<Integer, ? extends ItemStack> items = inven.all(item.getTypeId());
 		int slot = -1;
 		int smallest = 64;
-		//iterator for the hashmap
-		Set<?> set = items.entrySet();
-		Iterator<?> i = set.iterator();
-		//ItemStack highest = new ItemStack(repairItem.getType(), 0);
-		while(i.hasNext()){
-			Map.Entry me = (Map.Entry)i.next();
-			ItemStack item1 = (ItemStack) me.getValue();
-			//if the player has doesn't not have enough of the item used to repair
-			if (item1.getAmount() <= smallest) {
-				smallest = item1.getAmount();
-				slot = (Integer)me.getKey();
+		for (Entry<Integer, ? extends ItemStack> entry : items.entrySet()) {
+			if (entry.getValue().getAmount() <= smallest) {
+				smallest = entry.getValue().getAmount();
+				slot = entry.getKey();
 			}
 		}		
 		return slot;
@@ -393,6 +386,7 @@ public class AutoRepairSupport {
 		}
 		return enoughItemFlag;
 	}
+	
 
 	public double armPercentDmg() {
 		PlayerInventory inven = player.getInventory();
@@ -400,8 +394,10 @@ public class AutoRepairSupport {
 		double totalDmg = 0;
 		double totalDurability = 0;
 		for (ItemStack i : armour) {
-			totalDmg += i.getDurability();
-			totalDurability += plugin.durability.get(i.getTypeId());
+			if (i.getType() != Material.AIR) {
+				totalDmg += i.getDurability();
+				totalDurability += plugin.durability.get(i.getTypeId());
+			}			
 		}
 		double percent = (totalDmg / totalDurability);
 		return percent;
@@ -436,10 +432,11 @@ public class AutoRepairSupport {
 	}
 	
 	public ArrayList<ItemStack> partialReq(ArrayList<ItemStack> req, ItemStack tool) {
+		ArrayList<ItemStack> newReq = new ArrayList<ItemStack>();
 		for (ItemStack i : req) {
-			i.setAmount(costItem(tool, i));
-		}		
-		return req;		
+			newReq.add(new ItemStack (i.getTypeId(), (costItem(tool, i))));
+		}
+		return newReq;		
 	}
 	
 	// checks to see if the player has enough of a list of items
