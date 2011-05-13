@@ -108,6 +108,9 @@ public class Repair extends AutoRepairSupport{
 		for( int i = 0; i < 9; i++){
 			repair(inventoryItems[i], i);
 		}
+		/**
+		 * A silly comment down the bottom
+		 */
 		
 		
 		return true;
