@@ -5,11 +5,11 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
-
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
-import org.bukkit.event.server.PluginEvent;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerListener;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
@@ -18,7 +18,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 import com.nijikokun.bukkit.Permissions.Permissions;
-import com.nijiko.coelho.iConomy.iConomy;
+import com.iConomy.*;
 import com.nijiko.permissions.PermissionHandler;
 import org.bukkit.plugin.Plugin;
 
@@ -40,8 +40,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public static boolean isPermissions = false;
 	public static final Logger log = Logger.getLogger("Minecraft");
 	public Repair repair = new Repair(this);
-	public static iConomy iConomy;
-	private PluginListener Listener = new PluginListener(this);
+	public iConomy iConomy = null;
 	public HashMap<Integer, Integer> durability = new HashMap<Integer, Integer>();
 
 	/*public AutoRepairPlugin(PluginLoader pluginLoader, Server instance,
@@ -58,8 +57,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 		//Listener = new Listener();
 		// Register our events
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLUGIN_ENABLE, Listener, Priority.Monitor, this);
-		pm.registerEvent(Event.Type.BLOCK_DAMAGED , blockListener, Priority.Monitor, this);		
+		pm.registerEvent(Event.Type.BLOCK_DAMAGE , blockListener, Priority.Monitor, this);
+		pm.registerEvent(Event.Type.PLUGIN_ENABLE, new server(this), Priority.Monitor, this);
+        pm.registerEvent(Event.Type.PLUGIN_DISABLE, new server(this), Priority.Monitor, this);
 
 		// EXAMPLE: Custom code, here we just output some info so we can check all is well
 		PluginDescriptionFile pdfFile = this.getDescription();
@@ -236,7 +236,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 				settings.put(setting, value);
 			}			
 		}catch (Exception e) {
-			log.info("Error reading AutoRepair config");
+			log.severe("Error reading AutoRepair config, they either do not exist or are not in the correct directory");
 		}		
 		return settings;
 
@@ -284,9 +284,23 @@ public class AutoRepairPlugin extends JavaPlugin {
 					}
 				}
 			}
+			if (getSettings().containsKey("anvil")) {
+				if (isANumber(getSettings().get("anvil"))) {
+					
+				}
+			}
 		} catch (Exception e){
-			log.info("Error reading AutoRepair config files");
+			log.severe("Error reading AutoRepair config, they either do not exist or are not in the correct directory");
 		}
+	}
+
+	public boolean isANumber(String in) {
+		try {
+			Integer.parseInt(in);
+		} catch (NumberFormatException ex) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -390,6 +404,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 	}
 
 	public static HashMap<String, ArrayList<ItemStack>> getRepairRecipies() {
+		if (repairRecipies == null) {
+			log.severe("Error reading AutoRepair config, they either do not exist or are not in the correct directory");
+		}
 		return repairRecipies;
 	}
 
@@ -424,7 +441,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public static HashMap<String, Integer> getiConCosts() {
 		return iConCosts;
 	}
-	
+
 	public void fillDurability() {
 		durability.put(Material.GOLD_AXE.getId(), 32);
 		durability.put(Material.GOLD_HOE.getId(), 32);
@@ -468,18 +485,49 @@ public class AutoRepairPlugin extends JavaPlugin {
 		durability.put(Material.GOLD_HELMET.getId(), 67);
 		durability.put(Material.GOLD_LEGGINGS.getId(), 91);
 	}
-	
-	private class PluginListener extends ServerListener {
 
-		public PluginListener(final AutoRepairPlugin plugin) {
+    
+    public class server extends ServerListener {
+        private AutoRepairPlugin plugin;
+
+        public server(AutoRepairPlugin plugin) {
+            this.plugin = plugin;
         }
 
-        @Override
-        public void onPluginEnabled(PluginEvent event) {
-            if(event.getPlugin().getDescription().getName().equals("iConomy")) {
-                AutoRepairPlugin.iConomy = (iConomy)event.getPlugin();
-                log.info("[AutoRepair] Attached to iConomy.");
+        public void onPluginDisable(PluginDisableEvent event) {
+            if (plugin.iConomy != null) {
+                if (event.getPlugin().getDescription().getName().equals("iConomy")) {
+                    plugin.iConomy = null;
+                    System.out.println("[AutoRepairPlugin] un-hooked from iConomy.");
+                }
+            }
+        }
+
+        public void onPluginEnable(PluginEnableEvent event) {
+            if (plugin.iConomy == null) {
+                Plugin iConomy = plugin.getServer().getPluginManager().getPlugin("iConomy");
+
+                if (iConomy != null) {
+                    if (iConomy.isEnabled() && iConomy.getClass().getName().equals("com.iConomy.iConomy")) {
+                        plugin.iConomy = (iConomy)iConomy;
+                        System.out.println("[AutoRepairPlugin] hooked into iConomy.");
+                    }
+                }
             }
         }
     }
+    
+//	private class PluginListener extends ServerListener {
+//
+//		public PluginListener(final AutoRepairPlugin plugin) {
+//		}
+//
+//		@Override
+//		public void onPluginEnable(PluginEnableEvent event) {
+//			if(event.getPlugin().getDescription().getName().equals("iConomy")) {
+//				AutoRepairPlugin.iConomy = (iConomy)event.getPlugin();
+//				log.info("[AutoRepair] Attached to iConomy.");
+//			}
+//		}
+//	}
 }

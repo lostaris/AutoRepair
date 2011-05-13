@@ -11,7 +11,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import com.nijiko.coelho.iConomy.iConomy;
+import com.iConomy.*;
+import com.iConomy.system.Account;
+import com.iConomy.system.Holdings;
 
 /**
  * Supplementary methods for AutoRepair
@@ -52,6 +54,8 @@ public class AutoRepairSupport {
 			// just icon cost
 			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
 				if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
+					Account account = iConomy.getAccount(player.toString());
+					Holdings balance = iConomy.getAccount(player.toString()).getHoldings();
 					player.sendMessage("§6For this " + tool.getType() + " it costs " +  iConomy.getBank().format(costICon(tool))							
 							+ " to repair now, or " + iConomy.getBank().format(AutoRepairPlugin.getiConCosts().get(toolString))
 							+ " to repair the full durability");
@@ -84,6 +88,12 @@ public class AutoRepairSupport {
 			player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
 		}
 	}
+	
+	public Account getAcount(Player player) {
+		return account = iConomy.getAccount(player.toString());
+	}
+	
+	public Holdings
 
 	/**
 	 * Method to warn a player their tool is close to breaking
@@ -267,7 +277,11 @@ public class AutoRepairSupport {
 		ArrayList<ItemStack> req = new ArrayList<ItemStack>();
 		for (Object key: totalCost.keySet()) {
 			//req.add(new ItemStack(Material.getMaterial(key.toString()), totalCost.get(key)));
-			req.add(new ItemStack(Material.getMaterial(key.toString()), (int) (totalCost.get(key) * armPercentDmg())));
+			int cost = (int) (totalCost.get(key) * armPercentDmg());
+			if (cost < 1) {
+				cost = 1;
+			}
+			req.add(new ItemStack(Material.getMaterial(key.toString()), cost));
 		}
 		return req;
 	}
@@ -283,7 +297,7 @@ public class AutoRepairSupport {
 		if (AutoRepairPlugin.isAllowed(player, "info")) { //!AutoRepairPlugin.isPermissions || AutoRepairPlugin.Permissions.has(player, "AutoRepair.info")) {
 			int usesLeft = this.returnUsesLeft(tool);
 			if (usesLeft != -1) {
-				player.sendMessage("§3" + usesLeft + " blocks left untill this tool breaks. "  + percentDmg(tool));
+				player.sendMessage("§3" + usesLeft + " blocks left untill this tool breaks.");
 			} else {
 				player.sendMessage("§6This is not a tool.");
 			}
@@ -414,12 +428,19 @@ public class AutoRepairSupport {
 	}
 	
 	public int costItem(ItemStack tool, ItemStack reqItem){
+		double doubleCost = reqItem.getAmount() * percentDmg(tool);
 		int cost = (int) (reqItem.getAmount() * percentDmg(tool));
-		if (cost < 1) {
+		double fraction = doubleCost - cost;
+		if (fraction >= 0.5) {
+			return (int) Math.ceil(doubleCost);
+		} else {
+			return (int) Math.floor(doubleCost);
+		}
+		/*if (cost < 1) {
 			return 1;
 		} else {
 			return cost;
-		}
+		}*/
 	}
 	
 	public int costICon(ItemStack tool) {

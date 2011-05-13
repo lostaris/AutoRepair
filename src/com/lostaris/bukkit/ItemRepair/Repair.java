@@ -15,6 +15,45 @@ public class Repair extends AutoRepairSupport{
 	public Repair(AutoRepairPlugin instance) {
 		super(instance, getPlayer());
 	}
+	
+	/**
+	 * Method to check affordability of a repair
+	 * @return true if it can be, false if it cant
+	 */
+	public boolean canAfford(ItemStack tool) {
+		// Just items
+		if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
+			if(isEnough(tool.toString())) {
+				return true;
+			}
+			
+		// just iCon
+		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
+			if (AutoRepairPlugin.getiConCosts().containsKey(tool.toString())) {
+				double balance = iConomy.getBank().getAccount(player.getName()).getBalance();
+				int cost = costICon(tool);
+				if (cost <= balance) {
+					return true;
+				}
+			}
+		
+		// both items and iCon
+		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
+			HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
+			ArrayList<ItemStack> req = recipies.get(tool.toString());
+			if (AutoRepairPlugin.getiConCosts().containsKey(tool.toString())
+					&& AutoRepairPlugin.getRepairRecipies().containsKey(tool.toString())) {
+				double balance = iConomy.getBank().getAccount(player.getName()).getBalance();
+				int cost = costICon(tool);
+				ArrayList<ItemStack> newReq = partialReq(req, tool);
+				if (cost <= balance && isEnoughItems(newReq)) {
+					return true;
+				}
+			}			
+		}
+		//this player cannot afford this repair
+		return false;
+	}
 
 	/**
 	 * Method to manually repair a players tool
@@ -49,7 +88,6 @@ public class Repair extends AutoRepairSupport{
 				int cost = costICon(tool);
 				if (cost <= balance) {
 					account.subtract(cost);
-					account.save();
 					player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " to repair " + itemName);
 					inven.setItem(slot, repItem(tool));
 				} else {
@@ -71,7 +109,6 @@ public class Repair extends AutoRepairSupport{
 				if (cost <= balance && isEnoughItems(newReq)) {
 					account.subtract(cost);
 					deduct(newReq);
-					account.save();
 					player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " and");
 					player.sendMessage("§3" + printFormatReqs(newReq) + " to repair "  + itemName);
 					inven.setItem(slot, repItem(tool));
@@ -88,6 +125,7 @@ public class Repair extends AutoRepairSupport{
 				//if (isEnoughItems(req)) {
 				if (isEnoughItems(newReq)) {
 					deduct(newReq);
+					player.sendMessage("§3Using " + printFormatReqs(newReq) + " to repair "  + itemName);
 					inven.setItem(slot, repItem(tool));
 				} else {
 					justItemsWarn(itemName, newReq);
@@ -129,7 +167,6 @@ public class Repair extends AutoRepairSupport{
 			// the user can afford to repair
 			if (cost <= balance) {
 				account.subtract(cost);
-				account.save();
 				player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " to repair " + itemName);
 				inven.setItem(slot, repItem(tool));
 			// the user cannot afford to repair
@@ -149,7 +186,6 @@ public class Repair extends AutoRepairSupport{
 			// the user can afford to repair
 			if (cost <= balance && isEnoughItems(req)) {
 				account.subtract(cost);
-				account.save();
 				deduct(req);
 				player.sendMessage("§3Using " + iConomy.getBank().format(cost) + " and");
 				player.sendMessage("§3" + printFormatReqs(req) + " to repair "  + itemName);
