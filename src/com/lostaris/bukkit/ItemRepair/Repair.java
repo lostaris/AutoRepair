@@ -54,6 +54,14 @@ public class Repair extends AutoRepairSupport{
 		//this player cannot afford this repair
 		return false;
 	}
+	
+	public boolean repair(ItemStack tool, int slot) {
+		if (canAfford(tool)) {
+			PlayerInventory inven = player.getInventory();
+			inven.setItem(slot, repItem(tool));
+		}
+		return false;
+	}
 
 	/**
 	 * Method to manually repair a players tool
