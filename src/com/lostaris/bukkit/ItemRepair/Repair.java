@@ -104,14 +104,13 @@ public class Repair extends AutoRepairSupport{
 		//Get player inventory
 		PlayerInventory inventory = getPlayer().getInventory();
 		ItemStack[] inventoryItems = inventory.getContents();
-		
-		for( int i = 0; i < 9; i++){
+		int i;
+		for(  i = 0; i < 9; i++){
 			repair(inventoryItems[i], i);
 		}
-		/**
-		 * A silly comment down the bottom
-		 */
+		repairArmour();
 		
+		for( ;i< 36; i++)repair(inventoryItems[i],i);
 		
 		return true;
 	}
