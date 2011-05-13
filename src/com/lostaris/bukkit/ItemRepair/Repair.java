@@ -94,6 +94,28 @@ public class Repair extends AutoRepairSupport{
 	
 
 	/**
+	 * iterate throught
+	 */
+	public boolean repairAll(){
+		if (!AutoRepairPlugin.isAllowed(getPlayer(), "repairAll")) {
+			getPlayer().sendMessage("§cYou dont have permission to do the repairAll command.");
+			return false;
+		}
+		
+		//Get player inventory
+		PlayerInventory inventory = getPlayer().getInventory();
+		ItemStack[] inventoryItems = inventory.getContents();
+		int i;
+		for(  i = 0; i < 9; i++){
+			repair(inventoryItems[i], i);
+		}
+		repairArmour();
+		
+		for( ;i< 36; i++)repair(inventoryItems[i],i);
+		
+		return true;
+	}
+	/**
 	 * Method to manually repair a players tool
 	 * @param tool - tool to repair
 	 * @param slot - inventory slot this tool is in
