@@ -54,10 +54,8 @@ public class AutoRepairSupport {
 			// just icon cost
 			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
 				if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
-					Account account = iConomy.getAccount(player.toString());
-					Holdings balance = iConomy.getAccount(player.toString()).getHoldings();
-					player.sendMessage("§6For this " + tool.getType() + " it costs " +  iConomy.getBank().format(costICon(tool))							
-							+ " to repair now, or " + iConomy.getBank().format(AutoRepairPlugin.getiConCosts().get(toolString))
+					player.sendMessage("§6For this " + tool.getType() + " it costs " +  iConomy.format(costICon(tool))							
+							+ " to repair now, or " + iConomy.format(AutoRepairPlugin.getiConCosts().get(toolString))
 							+ " to repair the full durability");
 				}
 				//both icon cost and item cost
@@ -65,9 +63,9 @@ public class AutoRepairSupport {
 				if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString) &&
 						AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
 					player.sendMessage("§6For this " + tool.getType() + " to repair now you need: " +
-							iConomy.getBank().format(costICon(tool)) + " and");
+							iConomy.format(costICon(tool)) + " and");
 					player.sendMessage("§6" + printFormatReqsCost(AutoRepairPlugin.getRepairRecipies().get(toolString), tool));
-					player.sendMessage("§6Or to repair the full durability you need: " + iConomy.getBank().format(
+					player.sendMessage("§6Or to repair the full durability you need: " + iConomy.format(
 							AutoRepairPlugin.getiConCosts().get(toolString)));
 					player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));					
 				}
@@ -90,10 +88,14 @@ public class AutoRepairSupport {
 	}
 	
 	public Account getAcount(Player player) {
-		return account = iConomy.getAccount(player.toString());
+		Account account = iConomy.getAccount(player.toString());
+		return account;
 	}
 	
-	public Holdings
+	public Holdings getHolding(Player player) {
+		Holdings balance = iConomy.getAccount(player.toString()).getHoldings();
+		return balance;
+	}
 
 	/**
 	 * Method to warn a player their tool is close to breaking
@@ -130,7 +132,7 @@ public class AutoRepairSupport {
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
-							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
+							balance = getHolding(player).balance();
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 							if (cost > balance) {
 								iConWarn(toolString, cost);
@@ -138,7 +140,7 @@ public class AutoRepairSupport {
 							// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
-							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
+							balance = getHolding(player).balance();
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 							if (cost > balance || !isEnoughItems(reqItems)) {
@@ -158,7 +160,7 @@ public class AutoRepairSupport {
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
-							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
+							balance = getHolding(player).balance();
 							if (cost > balance) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 								iConWarn(toolString, cost);
@@ -167,7 +169,7 @@ public class AutoRepairSupport {
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
-							balance = iConomy.getBank().getAccount(player.getName()).getBalance();
+							balance = getHolding(player).balance();
 							if (cost > balance || !isEnoughItems(reqItems)) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
 								bothWarn(toolString, cost, reqItems);
@@ -215,7 +217,7 @@ public class AutoRepairSupport {
 							}				
 						}
 						player.sendMessage("§6To repair all your armour you need: "
-								+ iConomy.getBank().format(total));						
+								+ iConomy.format(total));						
 						//both icon and item cost
 					} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 						for (ItemStack i : inven.getArmorContents()) {				
@@ -225,7 +227,7 @@ public class AutoRepairSupport {
 							}
 						}
 						player.sendMessage("§6To repair all your armour you need: "
-								+ iConomy.getBank().format(total));
+								+ iConomy.format(total));
 						player.sendMessage("§6" + printFormatReqs(req));		
 						// just item cost
 					} else {
@@ -482,13 +484,13 @@ public class AutoRepairSupport {
 	 */
 	public void iConWarn(String itemName, int total) {
 		getPlayer().sendMessage("§cYou cannot afford to repair "  + itemName);
-		getPlayer().sendMessage("§cNeed: " + iConomy.getBank().format(total));
+		getPlayer().sendMessage("§cNeed: " + iConomy.format(total));
 	}
 
 	public void bothWarn(String itemName, int total, ArrayList<ItemStack> req) {
 		getPlayer().sendMessage("§cYou are missing one or more items to repair " + itemName);
 		getPlayer().sendMessage("§cNeed: " + printFormatReqs(req) + " and " +
-				iConomy.getBank().format(total));
+				iConomy.format(total));
 	}
 
 	public void justItemsWarn(String itemName, ArrayList<ItemStack> req) {

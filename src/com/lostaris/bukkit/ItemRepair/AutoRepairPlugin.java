@@ -366,26 +366,26 @@ public class AutoRepairPlugin extends JavaPlugin {
 		}
 	}
 
-	/**
-	 * Checks to see if the iConomy plugin is installed
-	 * @return
-	 */
-	public boolean checkiConomy() {
-		Plugin test = this.getServer().getPluginManager().getPlugin("iConomy");
-
-		if (test != null) {
-			if (getiSICon().compareToIgnoreCase("true") > 0 || getiSICon().compareToIgnoreCase("both") > 0) {
-				AutoRepairPlugin.useiConomy = true;
-			} else {
-				AutoRepairPlugin.useiConomy = true;
-			}
-
-		} else {
-			AutoRepairPlugin.useiConomy = false;
-		}
-
-		return useiConomy;
-	}
+//	/**
+//	 * Checks to see if the iConomy plugin is installed
+//	 * @return
+//	 */
+//	public boolean checkiConomy() {
+//		Plugin test = this.getServer().getPluginManager().getPlugin("iConomy");
+//
+//		if (test != null) {
+//			if (getiSICon().compareToIgnoreCase("true") > 0 || getiSICon().compareToIgnoreCase("both") > 0) {
+//				AutoRepairPlugin.useiConomy = true;
+//			} else {
+//				AutoRepairPlugin.useiConomy = true;
+//			}
+//
+//		} else {
+//			AutoRepairPlugin.useiConomy = false;
+//		}
+//
+//		return useiConomy;
+//	}
 
 	public void setIsICon(String b) {
 		AutoRepairPlugin.isiCon = b;		
@@ -495,7 +495,7 @@ public class AutoRepairPlugin extends JavaPlugin {
         }
 
         public void onPluginDisable(PluginDisableEvent event) {
-            if (plugin.iConomy != null) {
+            if (plugin.iConomy != null && useiConomy) {
                 if (event.getPlugin().getDescription().getName().equals("iConomy")) {
                     plugin.iConomy = null;
                     System.out.println("[AutoRepairPlugin] un-hooked from iConomy.");
@@ -504,7 +504,7 @@ public class AutoRepairPlugin extends JavaPlugin {
         }
 
         public void onPluginEnable(PluginEnableEvent event) {
-            if (plugin.iConomy == null) {
+            if (plugin.iConomy == null && useiConomy) {
                 Plugin iConomy = plugin.getServer().getPluginManager().getPlugin("iConomy");
 
                 if (iConomy != null) {
