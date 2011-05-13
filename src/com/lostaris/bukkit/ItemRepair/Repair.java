@@ -58,7 +58,35 @@ public class Repair extends AutoRepairSupport{
 	public boolean repair(ItemStack tool, int slot) {
 		if (canAfford(tool)) {
 			PlayerInventory inven = player.getInventory();
-			inven.setItem(slot, repItem(tool));
+			
+			HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
+			String itemName = Material.getMaterial(tool.getTypeId()).toString();
+			ArrayList<ItemStack> req = recipies.get(itemName);
+			
+			if (!AutoRepairPlugin.isRepairCosts()) {
+				getPlayer().sendMessage("§3Repaired " + itemName);
+				inven.setItem(slot, repItem(tool));
+				return true;
+			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
+				ArrayList<ItemStack> newReq = partialReq(req, tool);
+				deduct(newReq);
+				return true;
+			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
+				int cost = costICon(tool);
+				getHolding(player).subtract(cost);
+				player.sendMessage("§3Using " + iConomy.format(cost) + " to repair " + itemName);
+				inven.setItem(slot, repItem(tool));
+				return true;
+			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
+				int cost = costICon(tool);
+				ArrayList<ItemStack> newReq = partialReq(req, tool);
+				getHolding(player).subtract(cost);
+				deduct(newReq);
+				player.sendMessage("§3Using " + iConomy.format(cost) + " and");
+				player.sendMessage("§3" + printFormatReqs(newReq) + " to repair "  + itemName);
+				inven.setItem(slot, repItem(tool));
+				return true;
+			}
 		}
 		return false;
 	}
