@@ -23,7 +23,7 @@ public class Repair extends AutoRepairSupport{
 	public boolean canAfford(ItemStack tool) {
 		// Just items
 		if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
-			if(isEnough(tool.toString())) {
+			if(isEnough(tool.getType().toString())) {
 				return true;
 			}
 			
@@ -70,6 +70,7 @@ public class Repair extends AutoRepairSupport{
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
 				ArrayList<ItemStack> newReq = partialReq(req, tool);
 				deduct(newReq);
+				inven.setItem(slot, repItem(tool));
 				return true;
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
 				int cost = costICon(tool);
@@ -103,8 +104,23 @@ public class Repair extends AutoRepairSupport{
 			getPlayer().sendMessage("§cYou dont have permission to do the repair command.");
 			return false;
 		}
-
-		PlayerInventory inven = getPlayer().getInventory();
+		
+		if (repair(tool, slot)) {
+			return true;
+		} else {
+			ArrayList<ItemStack> req = AutoRepairPlugin.getRepairRecipies().get(tool.getType().toString());
+			ArrayList<ItemStack> newReq = partialReq(req, tool);
+			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
+				justItemsWarn(tool.getType().toString(), newReq);
+			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
+				iConWarn(tool.getType().toString(), costICon(tool));
+			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
+				bothWarn(tool.getType().toString(), costICon(tool), newReq);
+			}
+			return false;
+		}
+		
+		/*PlayerInventory inven = getPlayer().getInventory();
 		HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
 		String itemName = Material.getMaterial(tool.getTypeId()).toString();
 		ArrayList<ItemStack> req = recipies.get(itemName);
@@ -167,7 +183,7 @@ public class Repair extends AutoRepairSupport{
 				player.sendMessage("§cThis is not a tool");
 			}
 		}
-		return false;		
+		return false;	*/	
 	}
 
 	/** Method dealing with automatic repairing of tools

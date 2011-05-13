@@ -438,11 +438,6 @@ public class AutoRepairSupport {
 		} else {
 			return (int) Math.floor(doubleCost);
 		}
-		/*if (cost < 1) {
-			return 1;
-		} else {
-			return cost;
-		}*/
 	}
 	
 	public int costICon(ItemStack tool) {
