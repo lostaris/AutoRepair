@@ -1,6 +1,6 @@
 name: AutoRepair
 main: com.lostaris.bukkit.ItemRepair.AutoRepairPlugin
-version: 1.92
+version: 1.9.3
 commands:
   repair:
     description: uses one or more items to repair a tool or armour
@@ -9,6 +9,7 @@ commands:
       Incorrect usage of command /<command>.
       Proper usage of /<command>
        '/<command> [itemslot 1-9]' repair item.
+       '/<command> all' Repairs all items and armour.
        '/<command> [itemslot 1-9] ?' Check required repair materials.
        '/<command> [itemslot 1-9] dmg' Check number of uses left.
        '/<command> <?,dmg> as above but for current item.
