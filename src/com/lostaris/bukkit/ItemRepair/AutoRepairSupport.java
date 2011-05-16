@@ -1,5 +1,6 @@
 package com.lostaris.bukkit.ItemRepair;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,7 +37,7 @@ public class AutoRepairSupport {
 	private boolean warning = false;
 	private boolean lastWarning = false;
 	public static final Logger log = Logger.getLogger("Minecraft");
-	
+
 
 	/**
 	 * Method to return to the player the required items and/or iConomy cash needed for a repair
@@ -86,12 +87,12 @@ public class AutoRepairSupport {
 			player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
 		}
 	}
-	
+
 	public Account getAcount(Player player) {
 		Account account = iConomy.getAccount(player.toString());
 		return account;
 	}
-	
+
 	public Holdings getHolding(Player player) {
 		Holdings balance = iConomy.getAccount(player.toString()).getHoldings();
 		return balance;
@@ -402,7 +403,6 @@ public class AutoRepairSupport {
 		}
 		return enoughItemFlag;
 	}
-	
 
 	public double armPercentDmg() {
 		PlayerInventory inven = player.getInventory();
@@ -418,7 +418,7 @@ public class AutoRepairSupport {
 		double percent = (totalDmg / totalDurability);
 		return percent;
 	}
-	
+
 	public double percentDmg(ItemStack tool) {
 		double percentage = 0.0;
 		if (plugin.durability.containsKey(tool.getTypeId())) {
@@ -428,7 +428,7 @@ public class AutoRepairSupport {
 		}
 		return percentage;
 	}
-	
+
 	public int costItem(ItemStack tool, ItemStack reqItem){
 		double doubleCost = reqItem.getAmount() * percentDmg(tool);
 		int cost = (int) (reqItem.getAmount() * percentDmg(tool));
@@ -444,27 +444,41 @@ public class AutoRepairSupport {
 			return cost;
 		}*/
 	}
-	
-	public int costICon(ItemStack tool) {
-		int cost = (int) (AutoRepairPlugin.getiConCosts().get(tool.getType().toString()) * percentDmg(tool));
-		if (cost < 1) {
+
+	public double costICon(ItemStack tool) {
+		//int cost = (int) (AutoRepairPlugin.getiConCosts().get(tool.getType().toString()) * percentDmg(tool));
+		double doubleCost = (AutoRepairPlugin.getiConCosts().get(tool.getType().toString()) * percentDmg(tool));
+		/*double fraction = doubleCost - cost;
+		if (fraction >= 0.5) {
+			return (int) Math.ceil(doubleCost);
+		} else {
+			return (int) Math.floor(doubleCost);
+		}*/
+		return roundTwoDecimals(doubleCost);
+
+		/*if (cost < 1) {
 			return 1;
 		} else {
 			return cost;
-		}
+		}*/
 	}
-	
+
+	double roundTwoDecimals(double d) {
+		DecimalFormat twoDForm = new DecimalFormat("#.#");
+		return Double.valueOf(twoDForm.format(d));
+	}
+
 	public ArrayList<ItemStack> partialReq(ArrayList<ItemStack> req, ItemStack tool) {
 		ArrayList<ItemStack> newReq = new ArrayList<ItemStack>();
 		for (ItemStack i : req) {
 			newReq.add(new ItemStack (i.getTypeId(), (costItem(tool, i))));
 		}
-		return newReq;		
+		return newReq;
 	}
-	
+
 	// checks to see if the player has enough of a list of items
 	public boolean isEnoughItems (ArrayList<ItemStack> req) {
-		boolean enough = true;
+		//boolean enough = true;
 		if (req == null) {
 			return false;
 		}
@@ -473,24 +487,26 @@ public class AutoRepairSupport {
 			int neededAmount = req.get(i).getAmount();
 			int currTotal = getTotalItems(currItem);
 			if (neededAmount > currTotal) {
-				enough = false;
+				//enough = false;
+				return false;
 			}
 		}
-		return enough;
+		//return enough;
+		return true;
 	}
 
-	/*
+	/**
 	 * Methods to print the warning for lacking items and/or iConomy money
 	 */
-	public void iConWarn(String itemName, int total) {
+	public void iConWarn(String itemName, double cost) {
 		getPlayer().sendMessage("§cYou cannot afford to repair "  + itemName);
-		getPlayer().sendMessage("§cNeed: " + iConomy.format(total));
+		getPlayer().sendMessage("§cNeed: " + iConomy.format(cost));
 	}
 
-	public void bothWarn(String itemName, int total, ArrayList<ItemStack> req) {
+	public void bothWarn(String itemName, double cost, ArrayList<ItemStack> req) {
 		getPlayer().sendMessage("§cYou are missing one or more items to repair " + itemName);
 		getPlayer().sendMessage("§cNeed: " + printFormatReqs(req) + " and " +
-				iConomy.format(total));
+				iConomy.format(cost));
 	}
 
 	public void justItemsWarn(String itemName, ArrayList<ItemStack> req) {
@@ -506,7 +522,7 @@ public class AutoRepairSupport {
 		}
 		return string.toString();
 	}
-	
+
 	public String printFormatReqsCost(ArrayList<ItemStack> items, ItemStack tool) {
 		StringBuffer string = new StringBuffer();
 		string.append(" ");

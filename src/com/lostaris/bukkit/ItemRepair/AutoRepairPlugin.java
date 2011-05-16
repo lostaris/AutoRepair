@@ -124,6 +124,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 						// /rep arm
 					} else if (split[0].equalsIgnoreCase("arm")) {						
 						repair.repairArmour();
+						// /rep all
+					} else if (split[0].equalsIgnoreCase("all")) {						
+						repair.repairAll();
 						// /rep reload
 					} else if(split[0].equalsIgnoreCase("reload")) {
 						if (isAllowed(player, "reload")){ 
@@ -147,6 +150,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 						}
 					}
 				} catch (Exception e) {
+					e.printStackTrace();
 					return false;
 				}
 				// /rep arm ?
@@ -266,10 +270,12 @@ public class AutoRepairPlugin extends JavaPlugin {
 			if (getSettings().containsKey("iconomy")) {
 				if (getSettings().get("iconomy").equals("true")) {
 					setIsICon("true");
+					useiConomy = true;
 				} else if (getSettings().get("iconomy").equals("false")) {
 					setIsICon("false");
 				} else if (getSettings().get("iconomy").equals("both")) {
 					setIsICon("both");
+					useiConomy = true;
 				}
 			}
 			if (getSettings().containsKey("permissions")) {
@@ -365,27 +371,6 @@ public class AutoRepairPlugin extends JavaPlugin {
 			}
 		}
 	}
-
-//	/**
-//	 * Checks to see if the iConomy plugin is installed
-//	 * @return
-//	 */
-//	public boolean checkiConomy() {
-//		Plugin test = this.getServer().getPluginManager().getPlugin("iConomy");
-//
-//		if (test != null) {
-//			if (getiSICon().compareToIgnoreCase("true") > 0 || getiSICon().compareToIgnoreCase("both") > 0) {
-//				AutoRepairPlugin.useiConomy = true;
-//			} else {
-//				AutoRepairPlugin.useiConomy = true;
-//			}
-//
-//		} else {
-//			AutoRepairPlugin.useiConomy = false;
-//		}
-//
-//		return useiConomy;
-//	}
 
 	public void setIsICon(String b) {
 		AutoRepairPlugin.isiCon = b;		
@@ -498,7 +483,7 @@ public class AutoRepairPlugin extends JavaPlugin {
             if (plugin.iConomy != null && useiConomy) {
                 if (event.getPlugin().getDescription().getName().equals("iConomy")) {
                     plugin.iConomy = null;
-                    System.out.println("[AutoRepairPlugin] un-hooked from iConomy.");
+                    System.out.println("[AutoRepair] un-hooked from iConomy.");
                 }
             }
         }
@@ -510,7 +495,7 @@ public class AutoRepairPlugin extends JavaPlugin {
                 if (iConomy != null) {
                     if (iConomy.isEnabled() && iConomy.getClass().getName().equals("com.iConomy.iConomy")) {
                         plugin.iConomy = (iConomy)iConomy;
-                        System.out.println("[AutoRepairPlugin] hooked into iConomy.");
+                        System.out.println("[AutoRepair] hooked into iConomy.");
                     }
                 }
             }
