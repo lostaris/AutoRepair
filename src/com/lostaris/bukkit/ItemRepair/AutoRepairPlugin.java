@@ -30,7 +30,7 @@ import org.bukkit.plugin.Plugin;
 public class AutoRepairPlugin extends JavaPlugin {
 	private final AutoRepairBlockListener blockListener = new AutoRepairBlockListener(this);
 	private static HashMap<String, ArrayList<ItemStack>> repairRecipies; // item costs
-	private static HashMap<String, Integer> iConCosts; // iConomy costs
+	private static HashMap<String, Double> iConCosts; // iConomy costs
 	private HashMap<String, String> settings; // settings for the plugin
 	private static boolean useiConomy;
 	private static String isiCon; //are we using icon, both or not at all
@@ -315,7 +315,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 	 */
 	public static void readProperties() throws Exception {
 		HashMap<String, ArrayList<ItemStack> > map = new HashMap<String, ArrayList<ItemStack> >();
-		HashMap<String, Integer> iConomy = new HashMap<String, Integer>();
+		HashMap<String, Double> iConomy = new HashMap<String, Double>();
 		String fileName = "plugins/AutoRepair/RepairCosts.properties";
 		BufferedReader reader = new BufferedReader(new FileReader(fileName));
 		String line;
@@ -333,7 +333,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 			if (line.indexOf(' ') != -1) {
 				recipiesString = line.substring(keyPosition+1, line.indexOf(' '));
 				try {
-					int amount = Integer.parseInt(line.substring(line.lastIndexOf("=") +1, line.length()));
+					double amount = Double.parseDouble(line.substring(line.lastIndexOf("=") +1, line.length()));
 					iConomy.put(item, amount);
 				} catch (Exception e) {
 				}
@@ -419,11 +419,11 @@ public class AutoRepairPlugin extends JavaPlugin {
 		return repairCosts;
 	}
 
-	public static void setiConCosts(HashMap<String, Integer> iConomy) {
-		AutoRepairPlugin.iConCosts = iConomy;
+	public static void setiConCosts(HashMap<String, Double> iConomy2) {
+		AutoRepairPlugin.iConCosts = iConomy2;
 	}
 
-	public static HashMap<String, Integer> getiConCosts() {
+	public static HashMap<String, Double> getiConCosts() {
 		return iConCosts;
 	}
 

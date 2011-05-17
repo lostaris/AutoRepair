@@ -115,6 +115,7 @@ public class Repair extends AutoRepairSupport{
 
 					boolean rep =repair(inventoryItems[i], i);
 					if (!rep) {
+						player.sendMessage("You cannot afford to repair all the items in your quickbar");
 						return false;
 					}
 				}
@@ -127,6 +128,7 @@ public class Repair extends AutoRepairSupport{
 				if (super.getPlugin().durability.containsKey(inventoryItems[i].getTypeId())) {
 					boolean rep =repair(inventoryItems[i], i);
 					if (!rep) {
+						player.sendMessage("You cannot afford to repair all the items in your backpack");
 						return false;
 					}
 				}
@@ -253,7 +255,7 @@ public class Repair extends AutoRepairSupport{
 			// icon cost only
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 			balance = getHolding(player).balance();
-			int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+			Double cost = AutoRepairPlugin.getiConCosts().get(itemName);
 
 			// the user can afford to repair
 			if (cost <= balance) {
@@ -272,7 +274,7 @@ public class Repair extends AutoRepairSupport{
 			//both icon and item cost
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 			balance = getHolding(player).balance();
-			int cost = AutoRepairPlugin.getiConCosts().get(itemName);
+			Double cost = AutoRepairPlugin.getiConCosts().get(itemName);
 			// the user can afford to repair
 			if (cost <= balance && isEnoughItems(req)) {
 				getHolding(player).subtract(cost);

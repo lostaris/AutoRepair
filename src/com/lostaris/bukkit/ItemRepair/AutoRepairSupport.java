@@ -132,7 +132,7 @@ public class AutoRepairSupport {
 						double balance;
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							balance = getHolding(player).balance();
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 							if (cost > balance) {
@@ -140,7 +140,7 @@ public class AutoRepairSupport {
 							}
 							// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							balance = getHolding(player).balance();
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
@@ -160,7 +160,7 @@ public class AutoRepairSupport {
 						double balance;
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							balance = getHolding(player).balance();
 							if (cost > balance) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
@@ -168,7 +168,7 @@ public class AutoRepairSupport {
 							}
 							// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-							int cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							balance = getHolding(player).balance();
 							if (cost > balance || !isEnoughItems(reqItems)) {
@@ -464,7 +464,7 @@ public class AutoRepairSupport {
 	}
 
 	double roundTwoDecimals(double d) {
-		DecimalFormat twoDForm = new DecimalFormat("#.#");
+		DecimalFormat twoDForm = new DecimalFormat("#.##");
 		return Double.valueOf(twoDForm.format(d));
 	}
 
