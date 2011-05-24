@@ -39,22 +39,12 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public static PermissionHandler Permissions = null;
 	public static boolean isPermissions = false;
 	public static final Logger log = Logger.getLogger("Minecraft");
-	public Repair repair = new Repair(this);
+	
 	public iConomy iConomy = null;
 	public HashMap<Integer, Integer> durability = new HashMap<Integer, Integer>();
 
-	/*public AutoRepairPlugin(PluginLoader pluginLoader, Server instance,
-			PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
-		super(pluginLoader, instance, desc, folder, plugin, cLoader);
-		// TODO: Place any custom initialisation code here
-
-		// NOTE: Event registration should be done in onEnable not here as all events are
-		// unregistered when a plugin is disabled
-	}*/
-
 	public void onEnable() {
 		//  Place any custom enable code here including the registration of any events
-		//Listener = new Listener();
 		// Register our events
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvent(Event.Type.BLOCK_DAMAGE , blockListener, Priority.Monitor, this);
@@ -92,7 +82,8 @@ public class AutoRepairPlugin extends JavaPlugin {
 		PlayerInventory inven = player.getInventory();
 		String[] split = args;
 		String commandName = command.getName().toLowerCase();
-		AutoRepairSupport support = new AutoRepairSupport(this, player);
+		AutoRepairSupport support = new AutoRepairSupport(this, player, null);
+		Repair repair = new Repair(this, player, null);
 
 		// if the command is /repair
 		if (commandName.equals("repair")) {
@@ -107,7 +98,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 			if (split.length == 0) {
 				if (isAllowed(player, "repair")) {
 					tool = player.getItemInHand();
-					repair.manualRepair(tool, inven.getHeldItemSlot() );
+					support.setTool(tool);
+					//repair.manualRepair(tool, inven.getHeldItemSlot() );
+					repair.manualRepair(inven.getHeldItemSlot() );
 				} else {
 					player.sendMessage("§cYou dont have permission to do the repair command.");
 				}
@@ -116,10 +109,12 @@ public class AutoRepairPlugin extends JavaPlugin {
 				try {
 					char repairList = split[0].charAt(0);
 					// /rep ?
-					if (repairList == '?') {						
+					if (repairList == '?') {
+						support.setTool(player.getItemInHand());
 						support.toolReq(player.getItemInHand());
 						// /rep dmg
-					} else if (split[0].equalsIgnoreCase("dmg")) {						
+					} else if (split[0].equalsIgnoreCase("dmg")) {
+						support.setTool(player.getItemInHand());
 						support.durabilityLeft(inven.getItem(inven.getHeldItemSlot()));
 						// /rep arm
 					} else if (split[0].equalsIgnoreCase("arm")) {						
@@ -141,7 +136,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 							itemSlot = Integer.parseInt(split[0]);
 							if (itemSlot >0 && itemSlot <=9) {
 								tool = inven.getItem(itemSlot -1);
-								repair.manualRepair(tool, itemSlot -1);
+								support.setTool(player.getItemInHand());
+								//repair.manualRepair(tool, itemSlot -1);
+								repair.manualRepair(itemSlot -1);
 							} else {
 								player.sendMessage("§6ERROR: Slot must be a quick bar slot between 1 and 9");
 							}	
@@ -167,6 +164,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 					itemSlot = Integer.parseInt(split[0]);
 					if (getRecipe == '?' && itemSlot >0 && itemSlot <=9) {
 						if (isAllowed(player, "info")) {
+							support.setTool(inven.getItem(itemSlot -1));
 							support.toolReq(inven.getItem(itemSlot-1) );
 						} else {
 							player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
@@ -181,6 +179,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 					if (isAllowed(player, "info")) {
 						itemSlot = Integer.parseInt(split[0]);
 						if (itemSlot >0 && itemSlot <=9) {
+							support.setTool(inven.getItem(itemSlot -1));
 							support.durabilityLeft(inven.getItem(itemSlot -1));
 						} else {
 							player.sendMessage("§6ERROR: Slot must be a quick bar slot between 1 and 9");
@@ -423,7 +422,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 		AutoRepairPlugin.iConCosts = iConomy2;
 	}
 
-	public static HashMap<String, Double> getiConCosts() {
+	public HashMap<String, Double> getiConCosts() {
 		return iConCosts;
 	}
 

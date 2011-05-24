@@ -24,8 +24,8 @@ public class AutoRepairBlockListener extends BlockListener {
 
 	public AutoRepairBlockListener(final AutoRepairPlugin plugin) {
 		this.plugin = plugin;
-		this.support = new AutoRepairSupport(plugin, null);
-		this.repair = new Repair(plugin);
+		this.support = new AutoRepairSupport(plugin, null, null);
+		this.repair = new Repair(plugin, null, null);
 	}	
 
 	//put all Block related code here

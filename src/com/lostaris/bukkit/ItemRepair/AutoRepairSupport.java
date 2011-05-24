@@ -22,11 +22,13 @@ import com.iConomy.system.Holdings;
  */
 public class AutoRepairSupport {
 	private final AutoRepairPlugin plugin;
-	protected static Player player;
+	protected Player player;
+	protected ItemStack tool;
 
-	public AutoRepairSupport(AutoRepairPlugin instance, Player player) {
-		plugin = instance;
-		AutoRepairSupport.player = player;
+	public AutoRepairSupport(AutoRepairPlugin instance, Player player, ItemStack tool) {
+		this.plugin = instance;
+		this.player = player;
+		this.tool = tool;
 	}
 	// max durabilities for all tools 
 	private final int woodDurability = 59;
@@ -49,25 +51,25 @@ public class AutoRepairSupport {
 			String toolString = tool.getType().toString();
 			// if its not a tool stop here
 			if (!AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
-				player.sendMessage("§6This is not a tool.");
+				player.sendMessage("§6This item cannot be repaired.");
 				return;
 			}
 			// just icon cost
 			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
-				if (AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
+				if (getPlugin().getiConCosts().containsKey(toolString)) {
 					player.sendMessage("§6For this " + tool.getType() + " it costs " +  iConomy.format(costICon(tool))							
-							+ " to repair now, or " + iConomy.format(AutoRepairPlugin.getiConCosts().get(toolString))
+							+ " to repair now, or " + iConomy.format(getPlugin().getiConCosts().get(toolString))
 							+ " to repair the full durability");
 				}
 				//both icon cost and item cost
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 				if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString) &&
-						AutoRepairPlugin.getiConCosts().containsKey(toolString)) {
+						getPlugin().getiConCosts().containsKey(toolString)) {
 					player.sendMessage("§6For this " + tool.getType() + " to repair now you need: " +
 							iConomy.format(costICon(tool)) + " and");
 					player.sendMessage("§6" + printFormatReqsCost(AutoRepairPlugin.getRepairRecipies().get(toolString), tool));
 					player.sendMessage("§6Or to repair the full durability you need: " + iConomy.format(
-							AutoRepairPlugin.getiConCosts().get(toolString)));
+							getPlugin().getiConCosts().get(toolString)));
 					player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));					
 				}
 				// just item cost
@@ -89,12 +91,12 @@ public class AutoRepairSupport {
 	}
 
 	public Account getAcount(Player player) {
-		Account account = iConomy.getAccount(player.toString());
+		Account account = iConomy.getAccount(player.getName());
 		return account;
 	}
 
 	public Holdings getHolding(Player player) {
-		Holdings balance = iConomy.getAccount(player.toString()).getHoldings();
+		Holdings balance = iConomy.getAccount(player.getName()).getHoldings();
 		return balance;
 	}
 
@@ -132,7 +134,7 @@ public class AutoRepairSupport {
 						double balance;
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = getPlugin().getiConCosts().get(toolString);
 							balance = getHolding(player).balance();
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
 							if (cost > balance) {
@@ -140,7 +142,7 @@ public class AutoRepairSupport {
 							}
 							// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = getPlugin().getiConCosts().get(toolString);
 							balance = getHolding(player).balance();
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							player.sendMessage("§6WARNING: " + tool.getType() + " will break soon, no auto repairing");
@@ -160,7 +162,7 @@ public class AutoRepairSupport {
 						double balance;
 						// just iCon
 						if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
-							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = getPlugin().getiConCosts().get(toolString);
 							balance = getHolding(player).balance();
 							if (cost > balance) {
 								player.sendMessage("§6WARNING: " + tool.getType() + " will break soon");
@@ -168,7 +170,7 @@ public class AutoRepairSupport {
 							}
 							// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-							Double cost = AutoRepairPlugin.getiConCosts().get(toolString);
+							Double cost = getPlugin().getiConCosts().get(toolString);
 							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
 							balance = getHolding(player).balance();
 							if (cost > balance || !isEnoughItems(reqItems)) {
@@ -206,14 +208,13 @@ public class AutoRepairSupport {
 				char getRecipe = query.charAt(0);
 				// if the command is ? - the correct one
 				if (getRecipe == '?') {
-					int total =0;
+					double total =0;
 					ArrayList<ItemStack> req = repArmourAmount();
 					PlayerInventory inven = player.getInventory();
 					// just iCon costs
 					if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
 						for (ItemStack i : inven.getArmorContents()) {				
-							if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
-								//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+							if (getPlugin().getiConCosts().containsKey(i.getType().toString())) {
 								total += costICon(i);
 							}				
 						}
@@ -222,8 +223,7 @@ public class AutoRepairSupport {
 						//both icon and item cost
 					} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 						for (ItemStack i : inven.getArmorContents()) {				
-							if (AutoRepairPlugin.getiConCosts().containsKey(i.getType().toString())) {
-								//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
+							if (getPlugin().getiConCosts().containsKey(i.getType().toString())) {
 								total += costICon(i);
 							}
 						}
@@ -279,7 +279,6 @@ public class AutoRepairSupport {
 		// turn it back into a ItemStack array
 		ArrayList<ItemStack> req = new ArrayList<ItemStack>();
 		for (Object key: totalCost.keySet()) {
-			//req.add(new ItemStack(Material.getMaterial(key.toString()), totalCost.get(key)));
 			int cost = (int) (totalCost.get(key) * armPercentDmg());
 			if (cost < 1) {
 				cost = 1;
@@ -297,7 +296,7 @@ public class AutoRepairSupport {
 
 	//prints the durability left of the current tool to the player
 	public void durabilityLeft(ItemStack tool) {
-		if (AutoRepairPlugin.isAllowed(player, "info")) { //!AutoRepairPlugin.isPermissions || AutoRepairPlugin.Permissions.has(player, "AutoRepair.info")) {
+		if (AutoRepairPlugin.isAllowed(player, "info")) {
 			int usesLeft = this.returnUsesLeft(tool);
 			if (usesLeft != -1) {
 				player.sendMessage("§3" + usesLeft + " blocks left untill this tool breaks.");
@@ -307,7 +306,6 @@ public class AutoRepairSupport {
 		} else {
 			player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
 		}
-
 	}
 
 	/**
@@ -378,7 +376,6 @@ public class AutoRepairSupport {
 		//iterator for the hashmap
 		Set<?> set = items.entrySet();
 		Iterator<?> i = set.iterator();
-		//ItemStack highest = new ItemStack(repairItem.getType(), 0);
 		while(i.hasNext()){
 			Map.Entry me = (Map.Entry)i.next();
 			ItemStack item1 = (ItemStack) me.getValue();
@@ -438,29 +435,11 @@ public class AutoRepairSupport {
 		} else {
 			return (int) Math.floor(doubleCost);
 		}
-		/*if (cost < 1) {
-			return 1;
-		} else {
-			return cost;
-		}*/
 	}
 
 	public double costICon(ItemStack tool) {
-		//int cost = (int) (AutoRepairPlugin.getiConCosts().get(tool.getType().toString()) * percentDmg(tool));
-		double doubleCost = (AutoRepairPlugin.getiConCosts().get(tool.getType().toString()) * percentDmg(tool));
-		/*double fraction = doubleCost - cost;
-		if (fraction >= 0.5) {
-			return (int) Math.ceil(doubleCost);
-		} else {
-			return (int) Math.floor(doubleCost);
-		}*/
+		double doubleCost = (getPlugin().getiConCosts().get(tool.getType().toString()) * percentDmg(tool));
 		return roundTwoDecimals(doubleCost);
-
-		/*if (cost < 1) {
-			return 1;
-		} else {
-			return cost;
-		}*/
 	}
 
 	double roundTwoDecimals(double d) {
@@ -478,7 +457,6 @@ public class AutoRepairSupport {
 
 	// checks to see if the player has enough of a list of items
 	public boolean isEnoughItems (ArrayList<ItemStack> req) {
-		//boolean enough = true;
 		if (req == null) {
 			return false;
 		}
@@ -487,12 +465,15 @@ public class AutoRepairSupport {
 			int neededAmount = req.get(i).getAmount();
 			int currTotal = getTotalItems(currItem);
 			if (neededAmount > currTotal) {
-				//enough = false;
 				return false;
 			}
 		}
-		//return enough;
 		return true;
+	}
+	
+	public String toolType(ItemStack tool) {
+		
+		return "";
 	}
 
 	/**
@@ -552,10 +533,16 @@ public class AutoRepairSupport {
 		return plugin;
 	}
 
-	public static Player getPlayer() {
+	public Player getPlayer() {
 		return player;
 	}
 	public void setPlayer(Player player) {
-		AutoRepairSupport.player = player;
+		this.player = player;
+	}
+	public ItemStack getTool() {
+		return tool;
+	}
+	public void setTool(ItemStack tool) {
+		this.tool = tool;
 	}
 }
