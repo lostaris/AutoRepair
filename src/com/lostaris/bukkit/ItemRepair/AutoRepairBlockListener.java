@@ -36,7 +36,8 @@ public class AutoRepairBlockListener extends BlockListener {
 			return;
 		}
 		// set the player we are doing this for
-		this.support.setPlayer(player);
+		support.setPlayer(player);
+		repair.setPlayer(player);
 		ItemStack toolHand = player.getItemInHand();
 		PlayerInventory inven = player.getInventory();
 		int toolSlot = inven.getHeldItemSlot();
@@ -55,7 +56,7 @@ public class AutoRepairBlockListener extends BlockListener {
 				toolHand.getType() == Material.WOOD_AXE || toolHand.getType() == Material.WOOD_SWORD ||
 				toolHand.getType() == Material.WOOD_HOE) {
 			if (dmg > (woodDurability -3)) {
-				repair.autoRepairTool(toolHand, toolSlot);
+				repair.autoRepairTool(toolSlot);
 			} else if (dmg > (woodDurability -10)) {
 				support.repairWarn(toolHand, toolSlot);
 			}
@@ -64,7 +65,7 @@ public class AutoRepairBlockListener extends BlockListener {
 				toolHand.getType() == Material.GOLD_AXE || toolHand.getType() == Material.GOLD_SWORD ||
 				toolHand.getType() == Material.GOLD_HOE) {
 			if (dmg > (goldDurability -3)) {					
-				repair.autoRepairTool(toolHand, toolSlot);
+				repair.autoRepairTool(toolSlot);
 			} else if (dmg > (goldDurability -10)) {
 				support.repairWarn(toolHand, toolSlot);
 			}
@@ -73,7 +74,7 @@ public class AutoRepairBlockListener extends BlockListener {
 				toolHand.getType() == Material.STONE_AXE || toolHand.getType() == Material.STONE_SWORD ||
 				toolHand.getType() == Material.STONE_HOE) {
 			if (dmg > (stoneDurability -3)) {
-				repair.autoRepairTool(toolHand, toolSlot);
+				repair.autoRepairTool(toolSlot);
 			} else if (dmg > (stoneDurability -10)) {
 				support.repairWarn(toolHand, toolSlot);
 			}
@@ -82,7 +83,7 @@ public class AutoRepairBlockListener extends BlockListener {
 				toolHand.getType() == Material.IRON_AXE || toolHand.getType() == Material.IRON_SWORD ||
 				toolHand.getType() == Material.IRON_HOE) {
 			if (dmg > (ironDurability -3)) {
-				repair.autoRepairTool(toolHand, toolSlot);
+				repair.autoRepairTool(toolSlot);
 			} else if (dmg > (ironDurability -10)) {
 				support.repairWarn(toolHand, toolSlot);
 			}
@@ -91,7 +92,7 @@ public class AutoRepairBlockListener extends BlockListener {
 				toolHand.getType() == Material.DIAMOND_AXE || toolHand.getType() == Material.DIAMOND_SWORD ||
 				toolHand.getType() == Material.DIAMOND_HOE) {
 			if (dmg > (diamondDurability -3)) {
-				repair.autoRepairTool(toolHand, toolSlot);
+				repair.autoRepairTool(toolSlot);
 			} else if (dmg > (diamondDurability -10)) {
 				support.repairWarn(toolHand, toolSlot);
 			}

@@ -21,7 +21,7 @@ public class Repair extends AutoRepairSupport{
 	 * Method to check affordability of a repair
 	 * @return true if it can be, false if it cant
 	 */
-	public boolean canAfford(ItemStack tool) {
+	public boolean canAfford() {
 		// free repair
 		if (!AutoRepairPlugin.isRepairCosts()) {
 			return true;
@@ -60,38 +60,49 @@ public class Repair extends AutoRepairSupport{
 		return false;
 	}
 
-	public boolean repair(ItemStack tool, int slot) {
-		if (canAfford(tool)) {
-			PlayerInventory inven = player.getInventory();
-
+	public boolean repair(ItemStack tool) {
+		if (canAfford()) {			
+			super.setTool(tool);
 			HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
 			String itemName = Material.getMaterial(tool.getTypeId()).toString();
-			ArrayList<ItemStack> req = recipies.get(itemName);
-
+			ArrayList<ItemStack> req = recipies.get(itemName);			
+			
 			if (!AutoRepairPlugin.isRepairCosts()) {
-				getPlayer().sendMessage("§3Repaired " + itemName);
-				inven.setItem(slot, repItem(tool));
+				getPlayer().sendMessage("§3Repaired " + printItem(tool));
+				//inven.setItem(slot, repItem(tool));
 				return true;
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
 				ArrayList<ItemStack> newReq = partialReq(req, tool);
-				player.sendMessage("§3Using " + printFormatReqs(newReq) + " to repair "  + itemName);
-				inven.setItem(slot, repItem(tool));
+				if (!zeroItems(newReq)) {
+					player.sendMessage("§3Using " + printFormatReqs(newReq) + "§3 to repair "  + printItem(tool));
+				} else {
+					getPlayer().sendMessage("§3Repaired " + printItem(tool));
+				}
+				//inven.setItem(slot, repItem(tool));
 				deduct(newReq);
 				return true;
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
 				double cost = costICon(tool);
 				getHolding(player).subtract(cost);
-				player.sendMessage("§3Using " + iConomy.format(cost) + " to repair " + itemName);
-				inven.setItem(slot, repItem(tool));
+				if (cost != 0) {
+					player.sendMessage("§3Using §7" + iConomy.format(cost) + "§3 to repair " + printItem(tool));
+				} else {
+					getPlayer().sendMessage("§3Repaired " + printItem(tool));
+				}
+				//inven.setItem(slot, repItem(tool));
 				return true;
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 				double cost = costICon(tool);
 				ArrayList<ItemStack> newReq = partialReq(req, tool);
 				getHolding(player).subtract(cost);
 				deduct(newReq);
-				player.sendMessage("§3Using " + iConomy.format(cost) + " and");
-				player.sendMessage("§3" + printFormatReqs(newReq) + " to repair "  + itemName);
-				inven.setItem(slot, repItem(tool));
+				if (cost != 0 && !zeroItems(newReq)) {
+					player.sendMessage("§3Using §7" + iConomy.format(cost) + "§3 and");
+					player.sendMessage("§3" + printFormatReqs(newReq) + "§3 to repair "  + printItem(tool));
+				} else {
+					getPlayer().sendMessage("§3Repaired " + printItem(tool));
+				}			
+				//inven.setItem(slot, repItem(tool));
 				return true;
 			}
 		}
@@ -107,15 +118,19 @@ public class Repair extends AutoRepairSupport{
 			return false;
 		}
 
+		player.sendMessage("§3Repairing all items");
 		//Get player inventory
 		PlayerInventory inven = getPlayer().getInventory();
 		ItemStack[] inventoryItems = inven.getContents();
 		for(int i = 0; i < 9; i++){
 			if (inventoryItems[i] != null) {
 				if (super.getPlugin().durability.containsKey(inventoryItems[i].getTypeId())) {
-					boolean rep =repair(inventoryItems[i], i);
-					if (!rep) {
-						player.sendMessage("You cannot afford to repair all the items in your quickbar");
+					super.setTool(inven.getItem(i));
+					//boolean rep =repair(inven.getItem(i));
+					if (repair(inven.getItem(i))) {
+						inven.setItem(i, repItem(tool));
+					} else {
+						player.sendMessage("§cYou cannot afford to repair all the items in your quickbar");
 						return false;
 					}
 				}
@@ -126,9 +141,11 @@ public class Repair extends AutoRepairSupport{
 		for(int i = 9; i < 36; i++) {
 			if (inventoryItems[i] != null) {
 				if (super.getPlugin().durability.containsKey(inventoryItems[i].getTypeId())) {
-					boolean rep =repair(inventoryItems[i], i);
-					if (!rep) {
-						player.sendMessage("You cannot afford to repair all the items in your backpack");
+					super.setTool(inven.getItem(i));
+					if (repair(inven.getItem(i))) {
+						inven.setItem(i, repItem(tool));
+					} else {
+						player.sendMessage("§cYou cannot afford to repair all the items in your backpack");
 						return false;
 					}
 				}
@@ -141,21 +158,25 @@ public class Repair extends AutoRepairSupport{
 
 	/**
 	 * Method to manually repair a players tool
-	 * @param tool - tool to repair
 	 * @param slot - inventory slot this tool is in
 	 * @return
 	 */
-	public boolean manualRepair(ItemStack tool, int slot) {
-		if (!AutoRepairPlugin.isAllowed(getPlayer(), "repair")) {
-			getPlayer().sendMessage("§cYou dont have permission to do the repair command.");
+	public boolean manualRepair(int slot) {
+		PlayerInventory inven = getPlayer().getInventory();
+		super.tool = inven.getItem(slot);
+		//player.sendMessage("repair.manual." + itemType(tool));
+		if (!AutoRepairPlugin.isAllowed(getPlayer(), ("repair.manual." + itemType(tool)))) {
+			getPlayer().sendMessage("§cYou dont have permission to repair §2" + itemType(tool));
 			return false;
-		}
+		}		
+		
 		if (!super.getPlugin().getiConCosts().containsKey(tool.getType().name())) {
 			getPlayer().sendMessage("§cThis item cannot be repaired.");
 			return true;
 		}
 
-		if (repair(tool, slot)) {
+		if (repair(tool)) {
+			inven.setItem(slot, repItem(tool));
 			return true;
 		} else {
 			ArrayList<ItemStack> req = AutoRepairPlugin.getRepairRecipies().get(tool.getType().toString());
@@ -175,12 +196,15 @@ public class Repair extends AutoRepairSupport{
 	 * @param tool the item to repair
 	 * @param slot the inventory slot this tool is in
 	 */
-	public boolean autoRepairTool(ItemStack tool, int slot) {
-		if (!AutoRepairPlugin.isAllowed(player, "auto") || !AutoRepairPlugin.isAutoRepair()) { 
+	public boolean autoRepairTool(int slot) {
+		PlayerInventory inven = getPlayer().getInventory();
+		super.tool = inven.getItem(slot);
+		if (!AutoRepairPlugin.isAllowed(player, ("repair.auto." + itemType(tool))) || !AutoRepairPlugin.isAutoRepair()) { 
 			return false;
-		}
+		}		
 		
-		if (repair(tool, slot)) {
+		if (repair(tool)) {
+			inven.setItem(slot, repItem(tool));
 			return true;
 		} else {
 			ArrayList<ItemStack> req = AutoRepairPlugin.getRepairRecipies().get(tool.getType().toString());
@@ -214,18 +238,63 @@ public class Repair extends AutoRepairSupport{
 	 * Method to repair all the worn armour of a player
 	 */
 	public void repairArmour() {
-		if (!AutoRepairPlugin.isAllowed(player, "repair")) {
-			player.sendMessage("§cYou dont have permission to do the repair command.");
+		if (!AutoRepairPlugin.isAllowed(player, ("repair.manual.armour"))) {
+			player.sendMessage("§cYou dont have permission to repair §2armour");
 			return;
 		}
-
+		
 		PlayerInventory inven = player.getInventory();
+		if(inven.getBoots().getTypeId() == 0 && inven.getChestplate().getTypeId() == 0 &&
+				inven.getHelmet().getTypeId() == 0 && inven.getLeggings().getTypeId() == 0) {
+			player.sendMessage("§cYou are not wearing any armour");
+			return;
+		}
+		
+		if (inven.getHelmet().getType() != Material.AIR) {
+			super.tool = inven.getHelmet();
+			if (repair(tool)) {
+				inven.setHelmet(repItem(inven.getHelmet()));
+			} else {
+				player.sendMessage("§cYou cannot afford to repair your " + printItem(inven.getHelmet()));
+			}
+		}
+		if (inven.getChestplate().getType() != Material.AIR) {
+			super.tool = inven.getChestplate();
+			if (repair(tool)) {
+				inven.setChestplate(repItem(inven.getChestplate()));
+			} else {
+				player.sendMessage("§cYou cannot afford to repair your " + printItem(inven.getHelmet()));
+			}
+		}
+		if (inven.getLeggings().getType() != Material.AIR) {
+			super.tool = inven.getLeggings();
+			if (repair(tool)) {
+				inven.setLeggings(repItem(inven.getLeggings()));
+			} else {
+				player.sendMessage("§cYou cannot afford to repair your " + printItem(inven.getHelmet()));
+			}
+		}
+		if (inven.getBoots().getType() != Material.AIR) {
+			super.tool = inven.getBoots();
+			if (repair(tool)) {
+				inven.setBoots(repItem(inven.getBoots()));
+			} else {
+				player.sendMessage("§cYou cannot afford to repair your " + printItem(inven.getHelmet()));
+			}
+		}
+		/*PlayerInventory inven = player.getInventory();
 		ArrayList<ItemStack> req = repArmourAmount();
 		double total =0;
 		double balance;
+		
+		if(inven.getBoots().getTypeId() == 0 && inven.getChestplate().getTypeId() == 0 &&
+				inven.getHelmet().getTypeId() == 0 && inven.getLeggings().getTypeId() == 0) {
+			player.sendMessage("§cYou are not wearing any armour");
+			return;
+		}
 
 		if (!AutoRepairPlugin.isRepairCosts()) {
-			player.sendMessage("§3Repaired your armour");
+			player.sendMessage("§3Repaired §2your armour");
 			repArm();
 			// icon cost only
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0){
@@ -233,17 +302,20 @@ public class Repair extends AutoRepairSupport{
 
 			for (ItemStack i : inven.getArmorContents()) {				
 				if (getPlugin().getiConCosts().containsKey(i.getType().name())) {
-					//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
 					total += costICon(i);
 				}				
 			}
 			if (total <= balance) {
-				getHolding(player).subtract(total); //iConomy.db.set_balance(player.getName(), balance - total);
-				player.sendMessage("§3Using " + iConomy.format(total) + " to repair your armour");
+				getHolding(player).subtract(total);
+				if (total != 0) {
+					player.sendMessage("§3Using §f" + iConomy.format(total) + "§3 to repair §2your armour");
+				} else {
+					getPlayer().sendMessage("§3Repaired §2your armour");
+				}
 				repArm();
 			} else {
 				player.sendMessage("§cYou are cannot afford to repair your armour");
-				player.sendMessage("§cNeed: " + iConomy.format(total));
+				player.sendMessage("§cNeed: §f" + iConomy.format(total));
 			}
 			//both icon and item cost
 		} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
@@ -251,15 +323,18 @@ public class Repair extends AutoRepairSupport{
 
 			for (ItemStack i : inven.getArmorContents()) {				
 				if (getPlugin().getiConCosts().containsKey(i.getType().toString())) {
-					//total += AutoRepairPlugin.getiConCosts().get(i.getType().toString());
 					total += costICon(i);
 				}				
 			}						
 			if (total <= balance && isEnoughItems(req)) {
-				getHolding(player).subtract(total); //iConomy.db.set_balance(player.getName(), balance - total);
+				getHolding(player).subtract(total); 
 				deduct(req);
-				player.sendMessage("§3Using " + iConomy.format(total) + " and");
-				player.sendMessage("§3" + printFormatReqs(req) + " to repair your armour");
+				if (total != 0 && !zeroItems(req)) {
+					player.sendMessage("§3Using §f" + iConomy.format(total) + "§3 and");
+					player.sendMessage("§3" + printFormatReqs(req) + " to repair your armour");
+				} else {
+					getPlayer().sendMessage("§3Repaired §2your armour");
+				}	
 				repArm();
 			} else {
 				player.sendMessage("§cYou are missing one or more items to repair your armour");
@@ -269,27 +344,31 @@ public class Repair extends AutoRepairSupport{
 		} else {
 			if (isEnoughItems(req)) {
 				deduct(req);
-				player.sendMessage("§3Using " + printFormatReqs(req) + " to repair your armour");
+				if (!zeroItems(req)) {
+					player.sendMessage("§3Using " + printFormatReqs(req) + " to repair your armour");
+				} else {
+					getPlayer().sendMessage("§3Repaired §2your armour");
+				}
 				repArm();
 			} else {
 				player.sendMessage("§cYou are missing one or more items to repair your armour");
 				player.sendMessage("§cNeed: " + printFormatReqs(req));
 			}
-		}
+		}*/
 	}
 
-	/* 
+	/** 
 	 * Method to do the actual repairing of a players armour
 	 */
-	public void repArm () {
+	/*public void repArm () {
 		PlayerInventory inven = player.getInventory();
 		if(inven.getBoots().getTypeId() != 0 ) {inven.setBoots(repItem(inven.getBoots()));}
 		if(inven.getChestplate().getTypeId() != 0 ) {inven.setChestplate(repItem(inven.getChestplate()));}
 		if(inven.getHelmet().getTypeId() != 0 ) {inven.setHelmet(repItem(inven.getHelmet()));}
 		if(inven.getLeggings().getTypeId() != 0 ) {inven.setLeggings(repItem(inven.getLeggings()));}
-	}
+	}*/
 
-	/*
+	/**
 	 * Deducts the items needed from a player to do a repair
 	 */
 	public void deduct(ArrayList<ItemStack> req) {

@@ -38,8 +38,9 @@ public class AutoRepairPlugin extends JavaPlugin {
 	private static boolean repairCosts; // is there repair costs
 	public static PermissionHandler Permissions = null;
 	public static boolean isPermissions = false;
+	private static String rounding;
 	public static final Logger log = Logger.getLogger("Minecraft");
-	
+
 	public iConomy iConomy = null;
 	public HashMap<Integer, Integer> durability = new HashMap<Integer, Integer>();
 
@@ -49,7 +50,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvent(Event.Type.BLOCK_DAMAGE , blockListener, Priority.Monitor, this);
 		pm.registerEvent(Event.Type.PLUGIN_ENABLE, new server(this), Priority.Monitor, this);
-        pm.registerEvent(Event.Type.PLUGIN_DISABLE, new server(this), Priority.Monitor, this);
+		pm.registerEvent(Event.Type.PLUGIN_DISABLE, new server(this), Priority.Monitor, this);
 
 		// EXAMPLE: Custom code, here we just output some info so we can check all is well
 		PluginDescriptionFile pdfFile = this.getDescription();
@@ -87,37 +88,29 @@ public class AutoRepairPlugin extends JavaPlugin {
 
 		// if the command is /repair
 		if (commandName.equals("repair")) {
-			// if the player is no allowed to use the command end noe
+			// if the player is no allowed to use the command end now
 			if (!isAllowed(player, "access")) {
 				return true;
 			}
 
-			ItemStack tool;
 			int itemSlot = 0;
 			// for /rep
 			if (split.length == 0) {
-				if (isAllowed(player, "repair")) {
-					tool = player.getItemInHand();
-					support.setTool(tool);
-					//repair.manualRepair(tool, inven.getHeldItemSlot() );
-					repair.manualRepair(inven.getHeldItemSlot() );
-				} else {
-					player.sendMessage("§cYou dont have permission to do the repair command.");
-				}
+				repair.manualRepair(inven.getHeldItemSlot() );
 				// we have further arguments
 			} else if (split.length == 1) {
 				try {
 					char repairList = split[0].charAt(0);
 					// /rep ?
+					support.setTool(player.getItemInHand());
 					if (repairList == '?') {
-						support.setTool(player.getItemInHand());
 						support.toolReq(player.getItemInHand());
 						// /rep dmg
 					} else if (split[0].equalsIgnoreCase("dmg")) {
-						support.setTool(player.getItemInHand());
 						support.durabilityLeft(inven.getItem(inven.getHeldItemSlot()));
 						// /rep arm
-					} else if (split[0].equalsIgnoreCase("arm")) {						
+					} else if (split[0].equalsIgnoreCase("arm") || split[0].equalsIgnoreCase("armour")
+							|| split[0].equalsIgnoreCase("armor")) {						
 						repair.repairArmour();
 						// /rep all
 					} else if (split[0].equalsIgnoreCase("all")) {						
@@ -132,19 +125,12 @@ public class AutoRepairPlugin extends JavaPlugin {
 						}
 					}else {
 						// rep [itemslot]
-						if (isAllowed(player, "repair")) {
-							itemSlot = Integer.parseInt(split[0]);
-							if (itemSlot >0 && itemSlot <=9) {
-								tool = inven.getItem(itemSlot -1);
-								support.setTool(player.getItemInHand());
-								//repair.manualRepair(tool, itemSlot -1);
-								repair.manualRepair(itemSlot -1);
-							} else {
-								player.sendMessage("§6ERROR: Slot must be a quick bar slot between 1 and 9");
-							}	
+						itemSlot = Integer.parseInt(split[0]);
+						if (itemSlot >0 && itemSlot <=9) {
+							repair.manualRepair(itemSlot -1);
 						} else {
-							player.sendMessage("§cYou dont have permission to do the repair command.");
-						}
+							player.sendMessage("§6ERROR: Slot must be a quick bar slot between 1 and 9");
+						}	
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -165,7 +151,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 					if (getRecipe == '?' && itemSlot >0 && itemSlot <=9) {
 						if (isAllowed(player, "info")) {
 							support.setTool(inven.getItem(itemSlot -1));
-							support.toolReq(inven.getItem(itemSlot-1) );
+							support.toolReq(inven.getItem(itemSlot-1));
 						} else {
 							player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
 						}
@@ -291,7 +277,18 @@ public class AutoRepairPlugin extends JavaPlugin {
 			}
 			if (getSettings().containsKey("anvil")) {
 				if (isANumber(getSettings().get("anvil"))) {
-					
+
+				}
+			}
+			if (getSettings().containsKey("rounding")) {
+				if (getSettings().get("rounding").equals("flat")) {
+					setRounding("flat");
+				}
+				else if (getSettings().get("rounding").equals("round")) {
+					setRounding("round");
+				}
+				else if (getSettings().get("rounding").equals("min")) {
+					setRounding("min");
 				}
 			}
 		} catch (Exception e){
@@ -378,6 +375,13 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public static String getiSICon() {
 		return AutoRepairPlugin.isiCon;
 	}
+	
+	public String getRounding() {
+		return AutoRepairPlugin.rounding;
+	}
+	public void setRounding(String b) {
+		AutoRepairPlugin.rounding = b;		
+	}
 
 	public static boolean getUseIcon() {
 		return AutoRepairPlugin.useiConomy;
@@ -427,6 +431,8 @@ public class AutoRepairPlugin extends JavaPlugin {
 	}
 
 	public void fillDurability() {
+		durability.put(Material.FLINT_AND_STEEL.getId(), 64);		
+		durability.put(Material.FISHING_ROD.getId(), 32);
 		durability.put(Material.GOLD_AXE.getId(), 32);
 		durability.put(Material.GOLD_HOE.getId(), 32);
 		durability.put(Material.GOLD_PICKAXE.getId(), 32);
@@ -470,48 +476,34 @@ public class AutoRepairPlugin extends JavaPlugin {
 		durability.put(Material.GOLD_LEGGINGS.getId(), 91);
 	}
 
-    
-    public class server extends ServerListener {
-        private AutoRepairPlugin plugin;
 
-        public server(AutoRepairPlugin plugin) {
-            this.plugin = plugin;
-        }
+	public class server extends ServerListener {
+		private AutoRepairPlugin plugin;
 
-        public void onPluginDisable(PluginDisableEvent event) {
-            if (plugin.iConomy != null && useiConomy) {
-                if (event.getPlugin().getDescription().getName().equals("iConomy")) {
-                    plugin.iConomy = null;
-                    System.out.println("[AutoRepair] un-hooked from iConomy.");
-                }
-            }
-        }
+		public server(AutoRepairPlugin plugin) {
+			this.plugin = plugin;
+		}
 
-        public void onPluginEnable(PluginEnableEvent event) {
-            if (plugin.iConomy == null && useiConomy) {
-                Plugin iConomy = plugin.getServer().getPluginManager().getPlugin("iConomy");
+		public void onPluginDisable(PluginDisableEvent event) {
+			if (plugin.iConomy != null && useiConomy) {
+				if (event.getPlugin().getDescription().getName().equals("iConomy")) {
+					plugin.iConomy = null;
+					System.out.println("[AutoRepair] un-hooked from iConomy.");
+				}
+			}
+		}
 
-                if (iConomy != null) {
-                    if (iConomy.isEnabled() && iConomy.getClass().getName().equals("com.iConomy.iConomy")) {
-                        plugin.iConomy = (iConomy)iConomy;
-                        System.out.println("[AutoRepair] hooked into iConomy.");
-                    }
-                }
-            }
-        }
-    }
-    
-//	private class PluginListener extends ServerListener {
-//
-//		public PluginListener(final AutoRepairPlugin plugin) {
-//		}
-//
-//		@Override
-//		public void onPluginEnable(PluginEnableEvent event) {
-//			if(event.getPlugin().getDescription().getName().equals("iConomy")) {
-//				AutoRepairPlugin.iConomy = (iConomy)event.getPlugin();
-//				log.info("[AutoRepair] Attached to iConomy.");
-//			}
-//		}
-//	}
+		public void onPluginEnable(PluginEnableEvent event) {
+			if (plugin.iConomy == null && useiConomy) {
+				Plugin iConomy = plugin.getServer().getPluginManager().getPlugin("iConomy");
+
+				if (iConomy != null) {
+					if (iConomy.isEnabled() && iConomy.getClass().getName().equals("com.iConomy.iConomy")) {
+						plugin.iConomy = (iConomy)iConomy;
+						System.out.println("[AutoRepair] hooked into iConomy.");
+					}
+				}
+			}
+		}
+	}
 }

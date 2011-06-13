@@ -1,6 +1,6 @@
 name: AutoRepair
 main: com.lostaris.bukkit.ItemRepair.AutoRepairPlugin
-version: 1.9.5
+version: 1.11.1
 commands:
   repair:
     description: uses one or more items to repair a tool or armour
