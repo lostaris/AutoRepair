@@ -44,10 +44,10 @@ public class Repair extends AutoRepairSupport{
 		} 
 		// both items and iCon
 		else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-			HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
+			HashMap<String, ArrayList<ItemStack> > recipies = plugin.getRepairRecipies();
 			ArrayList<ItemStack> req = recipies.get(tool.getType().toString());
 			if (getPlugin().getiConCosts().containsKey(tool.getType().toString())
-					&& AutoRepairPlugin.getRepairRecipies().containsKey(tool.getType().toString())) {
+					&& plugin.getRepairRecipies().containsKey(tool.getType().toString())) {
 				double balance = getHolding(player).balance();
 				double cost = costICon(tool);
 				ArrayList<ItemStack> newReq = partialReq(req, tool);
@@ -63,13 +63,12 @@ public class Repair extends AutoRepairSupport{
 	public boolean repair(ItemStack tool) {
 		if (canAfford()) {			
 			super.setTool(tool);
-			HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
+			HashMap<String, ArrayList<ItemStack> > recipies = plugin.getRepairRecipies();
 			String itemName = Material.getMaterial(tool.getTypeId()).toString();
 			ArrayList<ItemStack> req = recipies.get(itemName);			
 			
 			if (!AutoRepairPlugin.isRepairCosts()) {
 				getPlayer().sendMessage("§3Repaired " + printItem(tool));
-				//inven.setItem(slot, repItem(tool));
 				return true;
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
 				ArrayList<ItemStack> newReq = partialReq(req, tool);
@@ -78,31 +77,28 @@ public class Repair extends AutoRepairSupport{
 				} else {
 					getPlayer().sendMessage("§3Repaired " + printItem(tool));
 				}
-				//inven.setItem(slot, repItem(tool));
 				deduct(newReq);
 				return true;
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("true") == 0) {
 				double cost = costICon(tool);
 				getHolding(player).subtract(cost);
-				if (cost != 0) {
+				if (cost > 0.00) {
 					player.sendMessage("§3Using §7" + iConomy.format(cost) + "§3 to repair " + printItem(tool));
 				} else {
 					getPlayer().sendMessage("§3Repaired " + printItem(tool));
 				}
-				//inven.setItem(slot, repItem(tool));
 				return true;
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 				double cost = costICon(tool);
 				ArrayList<ItemStack> newReq = partialReq(req, tool);
 				getHolding(player).subtract(cost);
 				deduct(newReq);
-				if (cost != 0 && !zeroItems(newReq)) {
+				if (cost > 0.00 && zeroItems(newReq)) {
 					player.sendMessage("§3Using §7" + iConomy.format(cost) + "§3 and");
 					player.sendMessage("§3" + printFormatReqs(newReq) + "§3 to repair "  + printItem(tool));
 				} else {
 					getPlayer().sendMessage("§3Repaired " + printItem(tool));
 				}			
-				//inven.setItem(slot, repItem(tool));
 				return true;
 			}
 		}
@@ -126,7 +122,6 @@ public class Repair extends AutoRepairSupport{
 			if (inventoryItems[i] != null) {
 				if (super.getPlugin().durability.containsKey(inventoryItems[i].getTypeId())) {
 					super.setTool(inven.getItem(i));
-					//boolean rep =repair(inven.getItem(i));
 					if (repair(inven.getItem(i))) {
 						inven.setItem(i, repItem(tool));
 					} else {
@@ -170,7 +165,7 @@ public class Repair extends AutoRepairSupport{
 			return false;
 		}		
 		
-		if (!super.getPlugin().getiConCosts().containsKey(tool.getType().name())) {
+		if (!super.getPlugin().getRepairRecipies().containsKey(tool.getType().name())) {
 			getPlayer().sendMessage("§cThis item cannot be repaired.");
 			return true;
 		}
@@ -179,7 +174,7 @@ public class Repair extends AutoRepairSupport{
 			inven.setItem(slot, repItem(tool));
 			return true;
 		} else {
-			ArrayList<ItemStack> req = AutoRepairPlugin.getRepairRecipies().get(tool.getType().toString());
+			ArrayList<ItemStack> req = plugin.getRepairRecipies().get(tool.getType().toString());
 			ArrayList<ItemStack> newReq = partialReq(req, tool);
 			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
 				justItemsWarn(tool.getType().toString(), newReq);
@@ -207,7 +202,7 @@ public class Repair extends AutoRepairSupport{
 			inven.setItem(slot, repItem(tool));
 			return true;
 		} else {
-			ArrayList<ItemStack> req = AutoRepairPlugin.getRepairRecipies().get(tool.getType().toString());
+			ArrayList<ItemStack> req = plugin.getRepairRecipies().get(tool.getType().toString());
 			if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("false") == 0) {
 				if (!getLastWarning()) {
 					if (AutoRepairPlugin.isAllowed(player, "warn")) {
@@ -284,17 +279,6 @@ public class Repair extends AutoRepairSupport{
 		}
 	}
 
-	/** 
-	 * Method to do the actual repairing of a players armour
-	 */
-	/*public void repArm () {
-		PlayerInventory inven = player.getInventory();
-		if(inven.getBoots().getTypeId() != 0 ) {inven.setBoots(repItem(inven.getBoots()));}
-		if(inven.getChestplate().getTypeId() != 0 ) {inven.setChestplate(repItem(inven.getChestplate()));}
-		if(inven.getHelmet().getTypeId() != 0 ) {inven.setHelmet(repItem(inven.getHelmet()));}
-		if(inven.getLeggings().getTypeId() != 0 ) {inven.setLeggings(repItem(inven.getLeggings()));}
-	}*/
-
 	/**
 	 * Deducts the items needed from a player to do a repair
 	 */
@@ -323,5 +307,4 @@ public class Repair extends AutoRepairSupport{
 			}
 		}
 	}
-
 }

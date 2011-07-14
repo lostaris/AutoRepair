@@ -85,6 +85,11 @@ public class AutoRepairPlugin extends JavaPlugin {
 		String commandName = command.getName().toLowerCase();
 		AutoRepairSupport support = new AutoRepairSupport(this, player, null);
 		Repair repair = new Repair(this, player, null);
+		
+		if (repairRecipies == null) {
+			player.sendMessage("§cPlease ask your server admin to setup AutoRepair correctly");
+			return true;
+		}
 
 		// if the command is /repair
 		if (commandName.equals("repair")) {
@@ -125,12 +130,16 @@ public class AutoRepairPlugin extends JavaPlugin {
 						}
 					}else {
 						// rep [itemslot]
-						itemSlot = Integer.parseInt(split[0]);
-						if (itemSlot >0 && itemSlot <=9) {
-							repair.manualRepair(itemSlot -1);
+						if (isANumber(split[0])) {
+							itemSlot = Integer.parseInt(split[0]);
+							if (itemSlot >0 && itemSlot <=9) {
+								repair.manualRepair(itemSlot -1);
+							} else {
+								player.sendMessage("§6ERROR: Slot must be a quick bar slot between 1 and 9");
+							}
 						} else {
-							player.sendMessage("§6ERROR: Slot must be a quick bar slot between 1 and 9");
-						}	
+							player.sendMessage("§cInvalid item slot");
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -147,14 +156,18 @@ public class AutoRepairPlugin extends JavaPlugin {
 			}else if ((split.length == 2 && split[1].length() ==1)) {
 				try {
 					char getRecipe = split[1].charAt(0);
-					itemSlot = Integer.parseInt(split[0]);
-					if (getRecipe == '?' && itemSlot >0 && itemSlot <=9) {
-						if (isAllowed(player, "info")) {
-							support.setTool(inven.getItem(itemSlot -1));
-							support.toolReq(inven.getItem(itemSlot-1));
-						} else {
-							player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
+					if (isANumber(split[0])) {
+						itemSlot = Integer.parseInt(split[0]);
+						if (getRecipe == '?' && itemSlot >0 && itemSlot <=9) {
+							if (isAllowed(player, "info")) {
+								support.setTool(inven.getItem(itemSlot -1));
+								support.toolReq(inven.getItem(itemSlot-1));
+							} else {
+								player.sendMessage("§cYou dont have permission to do the ? or dmg commands.");
+							}
 						}
+					} else {
+						player.sendMessage("§cInvalid item slot");
 					}
 				} catch (Exception e) {
 					return false;
@@ -375,7 +388,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 	public static String getiSICon() {
 		return AutoRepairPlugin.isiCon;
 	}
-	
+
 	public String getRounding() {
 		return AutoRepairPlugin.rounding;
 	}
@@ -391,7 +404,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 		AutoRepairPlugin.repairRecipies = hashMap;
 	}
 
-	public static HashMap<String, ArrayList<ItemStack>> getRepairRecipies() {
+	public HashMap<String, ArrayList<ItemStack>> getRepairRecipies() {
 		if (repairRecipies == null) {
 			log.severe("Error reading AutoRepair config, they either do not exist or are not in the correct directory");
 		}
@@ -431,6 +444,7 @@ public class AutoRepairPlugin extends JavaPlugin {
 	}
 
 	public void fillDurability() {
+		durability.put(Material.SHEARS.getId(), 239);
 		durability.put(Material.FLINT_AND_STEEL.getId(), 64);		
 		durability.put(Material.FISHING_ROD.getId(), 32);
 		durability.put(Material.GOLD_AXE.getId(), 32);

@@ -21,7 +21,7 @@ import com.iConomy.system.Holdings;
  * @author lostaris
  */
 public class AutoRepairSupport {
-	private final AutoRepairPlugin plugin;
+	protected final AutoRepairPlugin plugin;
 	protected Player player;
 	protected ItemStack tool;
 
@@ -51,7 +51,7 @@ public class AutoRepairSupport {
 			String toolString = tool.getType().toString();
 			//player.sendMessage(itemType(tool) + " " + printItem(tool));
 			// if its not a tool stop here
-			if (!AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
+			if (!plugin.getRepairRecipies().containsKey(toolString)) {
 				player.sendMessage("§6This item cannot be repaired.");
 				return;
 			}
@@ -69,7 +69,7 @@ public class AutoRepairSupport {
 				}
 				//both icon cost and item cost
 			} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
-				if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString) &&
+				if (plugin.getRepairRecipies().containsKey(toolString) &&
 						getPlugin().getiConCosts().containsKey(toolString)) {
 
 					if (plugin.getRounding().compareToIgnoreCase("flat") != 0) {
@@ -77,22 +77,22 @@ public class AutoRepairSupport {
 					}
 					player.sendMessage("§6For this " + printItem(tool) + " §6to repair now you need: §f" +
 							iConomy.format(costICon(tool)) + "§6 and");
-					player.sendMessage("§6" + printFormatReqsCost(AutoRepairPlugin.getRepairRecipies().get(toolString), tool));
+					player.sendMessage("§6" + printFormatReqsCost(plugin.getRepairRecipies().get(toolString), tool));
 					if (plugin.getRounding().compareToIgnoreCase("flat") != 0) {
 						player.sendMessage("§6To repair the full durability you need: §f" + iConomy.format(
 								getPlugin().getiConCosts().get(toolString)));
-						player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));
+						player.sendMessage("§6" + printFormatReqs(plugin.getRepairRecipies().get(toolString)));
 					}					
 				}
 				// just item cost
 			} else if (AutoRepairPlugin.isRepairCosts()) {
 				//tests to see if the config file has a repair reference to the item they wish to repair
-				if (AutoRepairPlugin.getRepairRecipies().containsKey(toolString)) {
+				if (plugin.getRepairRecipies().containsKey(toolString)) {
 					player.sendMessage("§6For this " + printItem(tool) + " §6to repair now you need: ");					
-					player.sendMessage("§6" + printFormatReqsCost(AutoRepairPlugin.getRepairRecipies().get(toolString), tool));
+					player.sendMessage("§6" + printFormatReqsCost(plugin.getRepairRecipies().get(toolString), tool));
 					if (plugin.getRounding().compareToIgnoreCase("flat") != 0) {
 						player.sendMessage("§6To repair the full durability you need:");
-						player.sendMessage("§6" + printFormatReqs(AutoRepairPlugin.getRepairRecipies().get(toolString)));
+						player.sendMessage("§6" + printFormatReqs(plugin.getRepairRecipies().get(toolString)));
 					}
 					
 				}
@@ -137,7 +137,7 @@ public class AutoRepairSupport {
 		if (!warning) {					
 			warning = true;		
 			try {				
-				repairRecipies = AutoRepairPlugin.getRepairRecipies();
+				repairRecipies = plugin.getRepairRecipies();
 				String toolString = tool.getType().toString();
 				//tests to see if the config file has a repair reference to the item they wish to repair
 				if (repairRecipies.containsKey(toolString)) {
@@ -159,14 +159,14 @@ public class AutoRepairSupport {
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							Double cost = getPlugin().getiConCosts().get(toolString);
 							balance = getHolding(player).balance();
-							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
+							ArrayList<ItemStack> reqItems = plugin.getRepairRecipies().get(toolString);
 							player.sendMessage("§6WARNING: " + printItem(tool) + " will break soon, no auto repairing");
 							if (cost > balance || !isEnoughItems(reqItems)) {
 								bothWarn(toolString, cost, reqItems);
 							}
 							// just item cost
 						} else {
-							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
+							ArrayList<ItemStack> reqItems = plugin.getRepairRecipies().get(toolString);
 							player.sendMessage("§6WARNING: " + printItem(tool) + " will break soon, no auto repairing");
 							if (!isEnoughItems(reqItems)) {
 								justItemsWarn(toolString, reqItems);
@@ -186,7 +186,7 @@ public class AutoRepairSupport {
 							// both iCon and item cost
 						} else if (AutoRepairPlugin.getiSICon().compareToIgnoreCase("both") == 0) {
 							Double cost = getPlugin().getiConCosts().get(toolString);
-							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
+							ArrayList<ItemStack> reqItems = plugin.getRepairRecipies().get(toolString);
 							balance = getHolding(player).balance();
 							if (cost > balance || !isEnoughItems(reqItems)) {
 								player.sendMessage("§6WARNING: " + printItem(tool) + " will break soon");
@@ -194,7 +194,7 @@ public class AutoRepairSupport {
 							}
 							// just item cost
 						} else {
-							ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(toolString);
+							ArrayList<ItemStack> reqItems = plugin.getRepairRecipies().get(toolString);
 							if (!isEnoughItems(reqItems)) {								
 								player.sendMessage("§6WARNING: " + printItem(tool) + " will break soon");
 								justItemsWarn(toolString, reqItems);
@@ -266,7 +266,7 @@ public class AutoRepairSupport {
 	 * @return req - total item costs of repairing a players warn armour
 	 */
 	public ArrayList<ItemStack> repArmourAmount() {
-		HashMap<String, ArrayList<ItemStack> > recipies = AutoRepairPlugin.getRepairRecipies();
+		HashMap<String, ArrayList<ItemStack> > recipies = plugin.getRepairRecipies();
 		PlayerInventory inven = player.getInventory();
 		ItemStack[] armour = inven.getArmorContents();
 		// list of all the items needed to repair all warn armour
@@ -399,7 +399,7 @@ public class AutoRepairSupport {
 
 	// checks to see if the player has enough of an item
 	public boolean isEnough(String itemName) {
-		ArrayList<ItemStack> reqItems = AutoRepairPlugin.getRepairRecipies().get(itemName);
+		ArrayList<ItemStack> reqItems = plugin.getRepairRecipies().get(itemName);
 		boolean enoughItemFlag = true;
 		ArrayList<ItemStack> newReq = partialReq(reqItems, tool);
 		for (int i =0; i < newReq.size(); i++) {
@@ -445,10 +445,8 @@ public class AutoRepairSupport {
 		int cost = (int) (reqItem.getAmount() * percentDmg(tool));
 		double fraction = doubleCost - cost;
 		if (fraction >= 0.5) {
-			//return (int) Math.ceil(doubleCost);
 			repCost = (int) Math.ceil(doubleCost);
 		} else {
-			//return (int) Math.floor(doubleCost);
 			repCost = (int) Math.floor(doubleCost);
 		}
 		if (plugin.getRounding().compareToIgnoreCase("min") == 0) {

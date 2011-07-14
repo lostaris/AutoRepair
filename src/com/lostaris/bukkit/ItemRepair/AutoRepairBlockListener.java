@@ -1,6 +1,6 @@
 package com.lostaris.bukkit.ItemRepair;
 
-import org.bukkit.Material;
+//import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockListener;
@@ -14,11 +14,6 @@ import org.bukkit.inventory.PlayerInventory;
  */
 public class AutoRepairBlockListener extends BlockListener {
 	private final AutoRepairPlugin plugin;
-	private final int woodDurability = 59;
-	private final int goldDurability = 32;
-	private final int stoneDurability = 131;
-	private final int ironDurability = 250;
-	private final int diamondDurability = 1561;
 	public AutoRepairSupport support;
 	public Repair repair;
 
@@ -51,49 +46,11 @@ public class AutoRepairBlockListener extends BlockListener {
 		/*  If a tool has less than 10 durability left warn the player if needed
 		 *  else repair it
 		 */
-
-		if (toolHand.getType() == Material.WOOD_SPADE || toolHand.getType() == Material.WOOD_PICKAXE || 
-				toolHand.getType() == Material.WOOD_AXE || toolHand.getType() == Material.WOOD_SWORD ||
-				toolHand.getType() == Material.WOOD_HOE) {
-			if (dmg > (woodDurability -3)) {
+		
+		if ("tools".compareToIgnoreCase(support.itemType(toolHand)) ==0 ) {
+			if (toolHand.getDurability() > (plugin.durability.get(toolHand.getTypeId()) -3)) {
 				repair.autoRepairTool(toolSlot);
-			} else if (dmg > (woodDurability -10)) {
-				support.repairWarn(toolHand, toolSlot);
-			}
-		}
-		if (toolHand.getType() == Material.GOLD_SPADE || toolHand.getType() == Material.GOLD_PICKAXE || 
-				toolHand.getType() == Material.GOLD_AXE || toolHand.getType() == Material.GOLD_SWORD ||
-				toolHand.getType() == Material.GOLD_HOE) {
-			if (dmg > (goldDurability -3)) {					
-				repair.autoRepairTool(toolSlot);
-			} else if (dmg > (goldDurability -10)) {
-				support.repairWarn(toolHand, toolSlot);
-			}
-		}
-		if (toolHand.getType() == Material.STONE_SPADE || toolHand.getType() == Material.STONE_PICKAXE || 
-				toolHand.getType() == Material.STONE_AXE || toolHand.getType() == Material.STONE_SWORD ||
-				toolHand.getType() == Material.STONE_HOE) {
-			if (dmg > (stoneDurability -3)) {
-				repair.autoRepairTool(toolSlot);
-			} else if (dmg > (stoneDurability -10)) {
-				support.repairWarn(toolHand, toolSlot);
-			}
-		}
-		if (toolHand.getType() == Material.IRON_SPADE || toolHand.getType() == Material.IRON_PICKAXE || 
-				toolHand.getType() == Material.IRON_AXE || toolHand.getType() == Material.IRON_SWORD ||
-				toolHand.getType() == Material.IRON_HOE) {
-			if (dmg > (ironDurability -3)) {
-				repair.autoRepairTool(toolSlot);
-			} else if (dmg > (ironDurability -10)) {
-				support.repairWarn(toolHand, toolSlot);
-			}
-		}
-		if (toolHand.getType() == Material.DIAMOND_SPADE || toolHand.getType() == Material.DIAMOND_PICKAXE || 
-				toolHand.getType() == Material.DIAMOND_AXE || toolHand.getType() == Material.DIAMOND_SWORD ||
-				toolHand.getType() == Material.DIAMOND_HOE) {
-			if (dmg > (diamondDurability -3)) {
-				repair.autoRepairTool(toolSlot);
-			} else if (dmg > (diamondDurability -10)) {
+			} else if (toolHand.getDurability() > (plugin.durability.get(toolHand.getTypeId()) -10)) {
 				support.repairWarn(toolHand, toolSlot);
 			}
 		}
